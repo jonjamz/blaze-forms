@@ -1,7 +1,7 @@
 About
 -----
 
-Build production-ready, reactive forms *in minutes*. No gimmicks, just awesome.
+Build custom reactive forms *in minutes*. Do it your way.
 
 Validation is handled using [SimpleSchemas](https://github.com/aldeed/meteor-simple-schema)--however, these are not required.
 
