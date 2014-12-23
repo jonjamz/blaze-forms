@@ -1,15 +1,12 @@
 About
 -----
 
-Build reactive forms.
+Build reactive forms:
 
-Build reactive forms *in minutes*.
-
-Build reactive forms *for production use*.
-
-Build reactive forms *with reusable custom components*.
-
-Build reactive forms *that work the way they should*.
+* *in minutes*.
+* *for production use*.
+* *with reusable custom components*.
+* *that work the way they should*.
 
 Validation is handled using [SimpleSchemas](https://github.com/aldeed/meteor-simple-schema)--however, these are not required.
 
@@ -27,7 +24,7 @@ Usage
 
 ### Getting Started
 
-**1. Provide a schema and an action function in a parent template's helpers**.
+**1. Provide a schema and an action function using a parent template's helpers**.
 
 ```javascript
 Template['testForm'].helpers({
@@ -48,7 +45,7 @@ Template['testForm'].helpers({
 });
 ```
 
-The action function runs when the form is submitted. It takes two params, as shown above:
+The **action function** runs when the form is submitted. It takes two params, as shown above:
 * `els`
   * This contains any elements in the form with class `.reactive-element`.
   * You'll likely serialize this and save it to the database.
@@ -70,7 +67,7 @@ The action function runs when the form is submitted. It takes two params, as sho
 </template>
 ```
 
-The `basicForm` and `basicInputs` templates are included with this package. See `templates:forms.html`.
+The `basicForm` and `basicInputs` templates are **included** with this package. See `templates:forms.html`.
 
 ### APIs
 
