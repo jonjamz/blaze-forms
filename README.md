@@ -1,7 +1,7 @@
 About
 -----
 
-Build custom reactive forms *in minutes*. Do it your way.
+Build reactive forms *in minutes* with reusable custom components.
 
 Validation is handled using [SimpleSchemas](https://github.com/aldeed/meteor-simple-schema)--however, these are not required.
 
