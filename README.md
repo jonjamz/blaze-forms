@@ -39,7 +39,10 @@ Template['testForm'].helpers({
   },
   action: function () {
     return function (els, callbacks) {
-      console.log("Action running!", els, callbacks);
+      console.log("[forms] Action running!");
+      console.log("[forms] Form elements!", els);
+      console.log("[forms] Callbacks!", callbacks);
+      callbacks.success();
     };
   }
 });
