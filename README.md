@@ -123,7 +123,7 @@ Elements can be used standalone, with a *SimpleSchema* specified, like this:
 ```
 
 However, elements are usually used within a form block helper, where they transparently
-integrate with the parent form component. Check it out--
+integrate with the parent form component.
 
 ```handlebars
 {{#basicForm schema=schema action=action}}
@@ -133,9 +133,9 @@ integrate with the parent form component. Check it out--
 
 Here's what changes when this happens:
 
-* Elements *use the form-level schema*
-* An element that fails validation will *prevent the form from submitting*
-* Elements *get access to form-level state*, enabling helpers like `{{loading}}`
+* Elements *use the form-level schema*.
+* An element that fails validation will *prevent the form from submitting*.
+* Elements *get access to form-level state*, enabling helpers like `{{loading}}`.
 
 **Element template helpers**
 
@@ -152,9 +152,9 @@ Element templates have access to the following helpers:
 * `{{valid}}`
   * Use this to show validation state on the element, for example a check mark.
 * `{{submitted}}`
-  * Lets us know if a parent ReactiveForm form block has been submitted yet
+  * Lets us know if a parent ReactiveForm form block has been submitted yet.
   * Used to wrap `{{errorMessage}}` to delay showing element invalidations until submit.
-  * Defaults to *true* unless this template exists inside a ReactiveForm form block
+  * Defaults to *true* unless this template exists inside a ReactiveForm form block.
 * `{{loading}}`
   * Lets us know if a form action is currently running.
   * Use this to disable changes to an element while the submit action is running.
