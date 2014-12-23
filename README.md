@@ -50,7 +50,7 @@ Template['testForm'].helpers({
 
 The **action function** runs when the form is submitted. It takes two params, as shown above:
 * `els`
-  * This contains any elements in the form with class `.reactive-element`.
+  * This contains any elements in the form block with class `.reactive-element`.
   * You'll likely serialize this and save it to the database.
   * You can also use this to clear each element's value after the form has successfully been submitted.
 * `callbacks`
