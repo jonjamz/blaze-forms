@@ -33,24 +33,25 @@ Template['testForm'].helpers({
     });
   },
   action: function () {
-
-    // This function runs when the form is submitted.
-
-    return (els, callbacks) ->
-      console.log "Action running!", els, callbacks
-
-      // The `els` param contains any elements in the form with class `.reactive-element`
-      // You'll likely serialize `els` and save things to the database.
-
-      // The `callbacks` param contains two methods to trigger the form's state:
-      // `callbacks.success()` --> Sets `success`.
-      // `callbacks.failed()`  --> Sets `failed`.
-
-      // Using `els`, you also can clear each element's value after the form has successfully
-      // been submitted.
+  
+    return function (els, callbacks) {
+      console.log("Action running!", els, callbacks);
+    };
+    
   }
 });
 ```
+
+The action function runs when the form is submitted. It takes two params, as shown above:
+* `els`
+  * This contains any elements in the form with class `.reactive-element`.
+  * You'll likely serialize this and save it to the database.
+  * You can also use this to clear each element's value after the form has successfully been submitted.
+* `callbacks`
+  * This contains two methods to trigger the form's state.
+  * Running `callbacks.success()` --> Sets `success`.
+  * Running `callbacks.failed()`  --> Sets `failed`.
+  * The form's `{{loading}}` state (see below) will run from the time you submit to the time you call one of these.
 
 **2. Add the ReactiveForm form block and elements to the parent template**
 
@@ -62,6 +63,8 @@ Template['testForm'].helpers({
   {{/basicForm}}
 </template>
 ```
+
+The `basicForm` and `basicInputs` templates are included with this package. See `templates:forms.html`.
 
 ### APIs
 
