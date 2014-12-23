@@ -94,7 +94,7 @@ ReactiveForms.createElement({
 
 **Element template requirements**
 
-* Template must contain *one form element*.
+* Template must contain *one form element*, for example `<input>`.
 * The form element must have the class `.reactive-element`.
 
 Here's an example of a ReactiveForms element template.
