@@ -67,7 +67,9 @@ The **action function** runs when the form is submitted. It takes two params, as
 </template>
 ```
 
-The `basicForm` and `basicInputs` templates are **included** with this package. See `templates:forms.html`.
+The `basicForm` and `basicInputs` templates are **included** with this package. 
+
+See `templates:forms.html`.
 
 ### APIs
 
