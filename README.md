@@ -19,7 +19,7 @@ Usage
 
 ### Getting Started
 
-**1. Provide a schema and an action function in a parent template's helpers**
+**1. Provide a schema and an action function in a parent template's helpers**.
 
 ```javascript
 Template['testForm'].helpers({
@@ -33,11 +33,9 @@ Template['testForm'].helpers({
     });
   },
   action: function () {
-  
     return function (els, callbacks) {
       console.log("Action running!", els, callbacks);
     };
-    
   }
 });
 ```
@@ -53,7 +51,7 @@ The action function runs when the form is submitted. It takes two params, as sho
   * Running `callbacks.failed()`  --> Sets `failed`.
   * The form's `{{loading}}` state (see below) will run from the time you submit to the time you call one of these.
 
-**2. Add the ReactiveForm form block and elements to the parent template**
+**2. Add the ReactiveForm form block and elements to the parent template**.
 
 ```handlebars
 <!-- Wrapped input with form-wide schema -->
