@@ -62,12 +62,12 @@ The **action function** runs when the form is submitted. It takes two params, as
 <!-- Wrapped input with form-wide schema -->
 <template name="testForm">
   {{#basicForm schema=schema action=action}}
-    {{> basicInputs field='testField'}}
+    {{> basicInput field='testField'}}
   {{/basicForm}}
 </template>
 ```
 
-The `basicForm` and `basicInputs` templates are **included** with this package. 
+The `basicForm` and `basicInput` templates are **included** with this package. 
 
 See `templates:forms.html`.
 
