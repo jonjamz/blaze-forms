@@ -322,7 +322,7 @@ gives you what you need to build your own stuff, and doesn't make too many assum
 
 * AutoForm is a much heavier package than `templates:form`, as it aims to do much more.
 * Its API is significantly more verbose.
-* It has many features and options--maybe too many, depending on your taste.
+* It has many features and options--perhaps too many, depending on your taste.
   * AutoForm will auto-generate HTML forms for you off your schema.
   * AutoForm integrates with [Collection2](https://github.com/aldeed/meteor-collection2).
   * It will fully handle form submission for you, including database inserts.
