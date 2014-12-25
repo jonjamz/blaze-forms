@@ -97,10 +97,13 @@ Create a ReactiveForms element from a compatible template.
 ReactiveForms.createElement({
   template: 'basicInput',
   validationEvent: 'keyup',
-
-  // This is an optional new method that lets you hook into the validation event
-  // and return a custom value to validate with.
   validationValue: function (el, clean, template) {
+    // This is an optional method that lets you hook into the validation event
+    // and return a custom value to validate with.
+    // Shown is the ReactiveForms default.
+    // The `clean` argument comes from SimpleSchema, but has been wrapped--
+    // it now takes just a value, not an object, and automatically uses the
+    // correct field.
     console.log('specifying my own validation value!');
     return clean(el.value);
   }
