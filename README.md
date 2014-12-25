@@ -59,7 +59,15 @@ The **action function** runs when the form is submitted. It takes two params, as
   * Running `callbacks.failed()`  --> Sets `failed`.
   * The form's `{{loading}}` state (see below) will run from the time you submit to the time you call one of these.
 
-**2. Add the ReactiveForm form block and elements to the parent template**.
+Also, the action function is bound to the data context of the form, meaning all validated
+form values are available with no extra work from `this`.
+
+Data from elements passed into the action function is **guaranteed to be valid** if:
+* You provided an adequate schema
+* You used ReactiveForms elements
+* You specified the correct schema field for each element (see `basicInput` in the next example).
+
+**2. Add the ReactiveForms form block and elements to the parent template**.
 
 ```handlebars
 <!-- Wrapped input with form-wide schema -->
@@ -70,7 +78,7 @@ The **action function** runs when the form is submitted. It takes two params, as
 </template>
 ```
 
-The `basicForm` and `basicInput` templates are **included** with this package. 
+The `basicForm` and `basicInput` templates are **included** with this package.
 
 See `templates:forms.html`.
 
@@ -88,7 +96,14 @@ Create a ReactiveForms element from a compatible template.
 ```javascript
 ReactiveForms.createElement({
   template: 'basicInput',
-  validationEvent: 'keyup'
+  validationEvent: 'keyup',
+
+  // This is an optional new method that lets you hook into the validation event
+  // and return a custom value to validate with.
+  validationValue: function (el, clean, template) {
+    console.log('specifying my own validation value!');
+    return clean(el.value);
+  }
 });
 ```
 
@@ -144,6 +159,9 @@ Here's what changes when this happens:
 
 Element templates have access to the following helpers:
 
+* `{{value}}`
+  * The last value of this element that was able to pass validation.
+  * Useful with some form components, such as a toggle button.
 * `{{label}}`
   * From the `label` field in your *SimpleSchema* for this element's field.
   * Use this as the title for your element, for example "First Name".
@@ -155,13 +173,13 @@ Element templates have access to the following helpers:
 * `{{valid}}`
   * Use this to show validation state on the element, for example a check mark.
 * `{{submitted}}`
-  * Lets us know if a parent ReactiveForm form block has been submitted yet.
+  * Lets us know if a parent ReactiveForms form block has been submitted yet.
   * Used to wrap `{{errorMessage}}` to delay showing element invalidations until submit.
-  * Defaults to *true* unless this template exists inside a ReactiveForm form block.
+  * Defaults to *true* unless this template exists inside a ReactiveForms form block.
 * `{{loading}}`
   * Lets us know if a form action is currently running.
   * Use this to disable changes to an element while the submit action is running.
-  * Defauts to *false* unless this template exists inside a ReactiveForm form block.
+  * Defauts to *false* unless this template exists inside a ReactiveForms form block.
 
 **Highlights**
 
@@ -234,10 +252,10 @@ Here's an example of a ReactiveForms form block template.
 ```
 
 Form blocks can technically be used standalone, with normal, non-reactive form elements like
-inputs and check boxes. The form's *action function*, which runs on submit, always receives
+inputs and check boxes. The form's **action function**, which runs on submit, always receives
 an array containing the HTML elements inside the form with the `.reactive-element` class.
 
-However, we strongly recommend using ReactiveForm elements inside a form block, which are
+However, we strongly recommend using ReactiveForms elements inside a form block, which are
 reactively validated with *SimpleSchema*:
 
 ```handlebars
@@ -248,6 +266,9 @@ reactively validated with *SimpleSchema*:
 {{/basicForm}}
 ```
 
+If you do this, you can trust that the data passed to your action function is already valid.
+All you'll need to do then is get the data from the form elements and save it somewhere!
+
 **Form block template helpers**
 
 Form block templates have access to the following helpers:
@@ -257,9 +278,9 @@ Form block templates have access to the following helpers:
 * `{{success}}`
   * This is *true* if the last attempt to run the form action was a success.
 * `{{invalid}}`
-  * This is *true* if any ReactiveForm element in the form block is invalid.
+  * This is *true* if any ReactiveForms element in the form block is invalid.
 * `{{invalidCount}}`
-  * This shows the number of currently invalid ReactiveForm elements in the form block.
+  * This shows the number of currently invalid ReactiveForms elements in the form block.
   * As elements become valid, the number adjusts reactively.
 * `{{loading}}`
   * Lets us know if a form action is currently running.
@@ -269,7 +290,7 @@ Form block templates have access to the following helpers:
 
 > A form block's *failed*, *success*, *invalid*, and *loading* states are mutually exclusive.
 
-> ReactiveForm elements inside a form block affect the form's validity. They are reactively
+> ReactiveForms elements inside a form block affect the form's validity. They are reactively
 validated with *SimpleSchema* at the form-level, thanks to a shared schema context.
 
 Contributors

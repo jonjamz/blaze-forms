@@ -1,5 +1,8 @@
 
-@ReactiveForms = ReactiveForms = do ->
+# Add the next upcoming version here to test!
+# Now working on: v1.1.0
+
+@ReactiveNext = do ->
 
   # Forms
   # ========================================================================================
@@ -12,18 +15,39 @@
   # Sets up a template to be used as a custom block helper for ReactiveForm elements,
   # at a minimum to provide a form element to wrap UI.contentBlock and pass in data.
 
-  # NOTE: Simple Schema validation is optional, but an action function is required.
+  # NOTE: SimpleSchema validation is optional, but an action function is required.
 
   forms.created = ->
     self = this
 
+    # Validation
+    # ----------
+    # Validate passed-in data
+
     check(self.data.schema, Match.Optional(SimpleSchema))
     check(self.data.action, Function) # (formObject) -> do something
+    check(self.data.data, Match.Optional(Object))
 
-    # We can use Simple Schema, or not...
+    # Schema
+    # ------
+    # Set schema if exists (optional)
+
     if self.data.schema
       ctx = self.data.schema.newContext()
       self.schemaContext = ctx
+
+    # Values
+    # ------
+    # Store validated element values as local data (can't submit invalid data anyway)
+
+    validatedValues = {} # (non-reactive)
+
+    self.setValidatedValue = (field, value) ->
+      validatedValues[field] = value
+
+    # States
+    # ------
+    # Set by the submit method below
 
     self.submitted = new Blaze.ReactiveVar(false)
     self.failed    = new Blaze.ReactiveVar(false)
@@ -31,7 +55,7 @@
     self.invalid   = new Blaze.ReactiveVar(false)
     self.loading   = new Blaze.ReactiveVar(false)
 
-    # Enforce opposing states on success and failed vars
+    # Ensure states are mutually exclusive--set with these methods only
     setSuccess = ->
       self.loading.set(false)
       self.invalid.set(false)
@@ -56,17 +80,20 @@
       self.failed.set(false)
       self.success.set(false)
 
-    # Once the user fixes the invalid fields, reactively set to valid
+    # When a user fixes the invalid fields, clear invalid state
     self.autorun ->
       if !self.schemaContext.invalidKeys().length
         self.invalid.set(false)
+
+    # Submit
+    # ------
 
     # Validate data and run provided action function
     self.submit = ->
       self.submitted.set(true)
 
-      # Check the schema if we're using Simple Schema
-      # See if any elements failed to validate--if so, return without running action.
+      # Check the schema if we're using SimpleSchema
+      # If any values are bad, return without running the action function.
       if self.schemaContext?
         if !!self.schemaContext.invalidKeys().length
           setInvalid()
@@ -76,12 +103,13 @@
       setLoading()
 
       # Send form elements and callbacks to action function.
+      # The action function is bound to validatedValues.
       formElements = self.findAll('.reactive-element')
       callbacks =
         success: setSuccess
         falied: setFailed
 
-      self.data.action(formElements, callbacks)
+      self.data.action.call(validatedValues, formElements, callbacks)
 
     return
 
@@ -97,6 +125,9 @@
 
     __schemaContext__: ->
       return Template.instance().schemaContext
+
+    __setValidatedValue__: ->
+      return Template.instance().setValidatedValue
 
     __submit__: ->
       return Template.instance().submit
@@ -136,48 +167,103 @@
 
   # Created callback (constructor)
   # ------------------------------
-  # Sets up its own schema and local schema context if passed (expects Simple Schema instances)
-  # Otherwise, it looks for a direct parent schema (from a #form block helper) and expects
+  # Sets up its own schema and local schema context if passed (expects SimpleSchema instances)
+  # Otherwise, it looks for a direct parent schema (from a form block helper) and expects
   # a passed-in context so that invalidations can be stored on the form.
 
-  elements.created = ->
-    self = this
-    parentData = Template.parentData(1)
+  elements.createdFactory = (options) ->
+    return ->
 
-    self.valid = new Blaze.ReactiveVar(true)
-    self.field = self.data.field || null
-    self.isChild = parentData && parentData.submitted?
+      self = this
+      parentData = Template.parentData(1)
 
-    # You can only run submit or check submitted if there's a surrounding {{#form}}
-    if self.isChild
-      self.submit = parentData.submit || null
-      self.submitted = parentData.submitted || null
-      self.loading = parentData.loading || null
+      self.valid = new Blaze.ReactiveVar(true)
+      self.field = self.data.field || null
+      self.isChild = parentData && parentData.submitted?
 
-    self.schema = self.data.schema || parentData.schema || null
-    self.schemaContext = self.data.schema && self.data.schema.newContext() ||
-      parentData.schemaContext ||
-      null
+      # Setup
+      # -----
 
-    # Check schema if we're using Simple Schema, otherwise do nothing
-    self.validateElement = ->
+      # Integrate with parent data and methods if possible
+      if self.isChild
+        self.submit = parentData.submit || null
+        self.submitted = parentData.submitted || null
+        self.loading = parentData.loading || null
+        self.schema = parentData.schema || null
+        self.schemaContext = parentData.schemaContext || null
+        initValue = parentData.data && parentData.data[self.field] || null
 
-      if self.schema? and self.schemaContext? and self.field?
+      # But if not, run standalone
+      else
+        self.schema = self.data.schema || null
+        self.schemaContext = self.data.schema && self.data.schema.newContext() || null
+        initValue = self.data.data && self.data.data[self.field] || null
+
+      # Value
+      # -----
+      # Track this element's latest validated value, starting with init data
+
+      self.value = new Blaze.ReactiveVar(initValue)
+
+      # Save a value--usually after successful validation
+      setValue = setValidatedValue = (value) ->
+
+        self.value.set(value)
+
+        # Save to a parent form block if possible
+        if self.isChild && parentData.setValidatedValue?
+          parentData.setValidatedValue(self.field, value)
+
+      # Validation
+      # ----------
+
+      # Get value to test from `.reactive-element` (user-provided, optionally)
+      getValidationValue = options.validationValue || (el, clean, template) ->
+        value = $(el).val()
+        return clean(value)
+
+      # Wrap the SimpleSchema `clean` function to add the key automatically
+      cleanValue = (val) ->
+        obj = {}
+        obj[self.field] = val
+        cln = self.schema.clean(obj)
+        return cln[self.field]
+
+      # Callback for `validationEvent` trigger
+      # --------------------------------------
+
+      self.validateElement = ->
         el = self.find('.reactive-element')
 
-        # validateOne() takes an object, not a single value, so...
-        object = {}
-        object[self.field] = el.value
+        if self.schema? and self.schemaContext?
 
-        clean = self.schema.clean(object)
+          # Get value from DOM element and alter value to avoid validation errors
+          val = getValidationValue(el, cleanValue, self)
 
-        isValid = self.schemaContext.validateOne(clean, self.field)
-        self.valid.set(isValid)
+          # We need an object to validate with--
+          object = {}
+          object[self.field] = val
 
-        # console.log 'Validating reactive form element', object, isValid
+          # Get true/false for validation (validating against this field only)
+          isValid = self.schemaContext.validateOne(object, self.field)
 
-    console.log 'New reactive form element created', self.schema, self.schemaContext
-    return
+          # Set `valid` property to reflect in templates
+          self.valid.set(isValid)
+
+          # Set `value` property, locally and on `self.field` on a parent, if valid
+          if isValid is true
+            setValidatedValue(val)
+            return
+
+        else
+
+          # Can't pass in `clean` method if user isn't using SimpleSchema
+          # Could provide a different utility method in the future for this...
+          val = getValidationValue(el, self)
+
+          # Set the value just for templates--can't validate without a schema
+          setValue(val)
+          return
 
   # Rendered callback
   # -----------------
@@ -188,9 +274,13 @@
 
   # Template helpers
   # ----------------
-  # Brings Simple Schema functionality into the template
+  # Brings SimpleSchema functionality and other useful helpers into the template
 
   elements.helpers =
+
+    value: ->
+      inst = Template.instance()
+      return inst.value.get()
 
     label: ->
       inst = Template.instance()
@@ -238,14 +328,19 @@
     check obj, Match.ObjectIncluding
       template: String
       validationEvent: String
+      validationValue: Match.Optional(Function)
 
     template = Template[obj.template]
+
+    options = {}
+    if obj.validationValue?
+      options.validationValue = obj.validationValue
 
     if template
       evt = {}
       evt[obj.validationEvent + ' .reactive-element'] = (e, t) ->
         t.validateElement()
-      template.created = elements.created
+      template.created = elements.createdFactory(options)
       template.rendered = elements.rendered
       template.helpers(elements.helpers)
       template.events evt
