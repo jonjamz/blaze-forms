@@ -40,6 +40,7 @@ Template['testForm'].helpers({
   action: function () {
     return function (els, callbacks) {
       console.log("[forms] Action running!");
+      console.log("[forms] Form data!", this);
       console.log("[forms] Form elements!", els);
       console.log("[forms] Callbacks!", callbacks);
       callbacks.success();
@@ -59,13 +60,19 @@ The **action function** runs when the form is submitted. It takes two params, as
   * Running `callbacks.failed()`  --> Sets `failed`.
   * The form's `{{loading}}` state (see below) will run from the time you submit to the time you call one of these.
 
-Also, the action function is bound to the data context of the form, meaning all validated
-form values are available with no extra work from `this`.
+Also, all validated form values are available with no extra work from `this`:
 
-Data from elements passed into the action function is **guaranteed to be valid** if:
-* You provided an adequate schema
-* You used ReactiveForms elements
+```javascript
+// Inside the action function...
+console.log(this); // Returns {testField: "xxx"}
+```
+
+Data from elements passed into the action function is **guaranteed to be valid**, considering:
+* You provided an adequate schema.
+* You used ReactiveForms elements.
 * You specified the correct schema field for each element (see `basicInput` in the next example).
+
+Hopefully, this satisfies your needs.
 
 **2. Add the ReactiveForms form block and elements to the parent template**.
 
@@ -100,12 +107,15 @@ ReactiveForms.createElement({
   validationValue: function (el, clean, template) {
     // This is an optional method that lets you hook into the validation event
     // and return a custom value to validate with.
-    // Shown is the ReactiveForms default.
+
+    // Shown below is the ReactiveForms default. Clearly, this won't work in the case
+    // of a multi-select form, but you could get those values and put them in an array.
+
     // The `clean` argument comes from SimpleSchema, but has been wrapped--
-    // it now takes just a value, not an object, and automatically uses the
-    // correct field.
-    console.log('specifying my own validation value!');
-    return clean(el.value);
+    // it now takes and returns just a value, not an object.
+    console.log('Specifying my own validation value!');
+    value = $(el).val();
+    return clean(value);
   }
 });
 ```
@@ -217,12 +227,15 @@ Here's an example of a ReactiveForms form block template.
     <!--
       Note:
 
-      Use this UI.contentBlock exactly as it is here, in every form block template
+      Use this UI.contentBlock exactly as it is here, in every form block template.
+      The first field (data) is optional, and lets you pass in default values.
     -->
 
     {{> UI.contentBlock
+        data=data
         schema=schema
         schemaContext=__schemaContext__
+        setValidatedValue=__setValidatedValue__
         submit=__submit__
         submitted=__submitted__
         loading=__loading__
@@ -295,6 +308,27 @@ Form block templates have access to the following helpers:
 
 > ReactiveForms elements inside a form block affect the form's validity. They are reactively
 validated with *SimpleSchema* at the form-level, thanks to a shared schema context.
+
+Other Forms Packages
+--------------------
+
+Here's the low-down on other Meteor forms packages and how they compare to this one.
+
+* [AutoForm](https://github.com/aldeed/meteor-autoform)
+  * Very heavy package compared to `templates:form`.
+  * More verbose API and more predefined options--maybe too many, depending on your taste.
+    * AutoForm will auto-generate HTML forms for you off your schema.
+    * AutoForm integrates with [Collection2](https://github.com/aldeed/meteor-collection2)
+    * It will fully handle form submission for you, including database inserts.
+  * Also validates with [SimpleSchema](https://github.com/aldeed/meteor-simple-schema).
+  * Comes from the pre-1.0 era of Meteor, and isn't fully optimized for the new Template API.
+    * In comparison, `templates:form` always keeps things self-contained in template instances.
+  * Has some nice plugins created by community members.
+  * In general, AutoForm is more about giving you every option under the sun, whereas
+  `templates:form` is minimalist in nature--it gives you the flexible options you need to build
+  your own stuff, and doesn't make too many assumptions about what you'll build.
+
+* Know of another decent forms package? Fork this repo, add it here, and create a PR!
 
 Contributors
 ------------
