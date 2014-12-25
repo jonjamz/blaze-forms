@@ -175,6 +175,7 @@ Element templates have access to the following helpers:
 * `{{value}}`
   * The last value of this element that was able to pass validation.
   * Useful with some form components, such as a toggle button.
+  * If you specified a `data` object on the form or element, this will initially contain the value associated with the relevant field in that data.
 * `{{label}}`
   * From the `label` field in your *SimpleSchema* for this element's field.
   * Use this as the title for your element, for example "First Name".
