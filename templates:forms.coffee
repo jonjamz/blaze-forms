@@ -1,8 +1,5 @@
 
-# Add the next upcoming version here to test!
-# Now working on: v1.1.0
-
-@ReactiveNext = do ->
+@ReactiveForms = ReactiveForms = do ->
 
   # Forms
   # ========================================================================================
