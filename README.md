@@ -314,21 +314,23 @@ Other Forms Packages
 
 Here's the low-down on other Meteor forms packages and how they compare to this one.
 
-* [AutoForm](https://github.com/aldeed/meteor-autoform)
-  * Very heavy package compared to `templates:form`.
-  * More verbose API and more predefined options--maybe too many, depending on your taste.
-    * AutoForm will auto-generate HTML forms for you off your schema.
-    * AutoForm integrates with [Collection2](https://github.com/aldeed/meteor-collection2)
-    * It will fully handle form submission for you, including database inserts.
-  * Also validates with [SimpleSchema](https://github.com/aldeed/meteor-simple-schema).
-  * Comes from the pre-1.0 era of Meteor, and isn't fully optimized for the new Template API.
-    * In comparison, `templates:form` always keeps things self-contained in template instances.
-  * Has some nice plugins created by community members.
-  * In general, AutoForm is more about giving you every option under the sun, whereas
-  `templates:form` is minimalist in nature--it gives you the flexible options you need to build
-  your own stuff, and doesn't make too many assumptions about what you'll build.
+**[AutoForm](https://github.com/aldeed/meteor-autoform)**
 
-* Know of another decent forms package? Fork this repo, add it here, and create a PR!
+> While AutoForm strives to offer every option under the sun, `templates:form` is minimalist in nature--it 
+gives you what you need to build your own stuff, and doesn't make too many assumptions!
+
+* AutoForm is a much heavier package than `templates:form`, as it aims to do much more.
+* Its API is significantly more verbose.
+* It has many features and options--maybe too many, depending on your taste.
+  * AutoForm will auto-generate HTML forms for you off your schema.
+  * AutoForm integrates with [Collection2](https://github.com/aldeed/meteor-collection2)
+  * It will fully handle form submission for you, including database inserts.
+* It also validates with [SimpleSchema](https://github.com/aldeed/meteor-simple-schema).
+* It comes from the pre-1.0 era of Meteor, and isn't fully optimized for the new Template API.
+  * In comparison, `templates:form` always keeps things self-contained in template instances.
+* It has some nice plugins created by community members.
+
+*Know of another good forms package? Fork this repo, add it here, and create a PR!*
 
 Contributors
 ------------
