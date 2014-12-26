@@ -89,7 +89,7 @@ The `basicForm` and `basicInput` templates are **included** with this package.
 
 See `templates:forms.html`.
 
-### APIs
+### API
 
 ReactiveForms has only two API endpoints.
 
