@@ -85,6 +85,25 @@ Hopefully, this satisfies your needs.
 </template>
 ```
 
+**3. Register the form block and elements with ReactiveForms**.
+
+This is where you can specify how the form gets submitted, and how the element gets validated.
+
+```javascript
+ReactiveForms.createForm({
+  template: 'basicForm',
+  submitType: 'normal'
+});
+
+ReactiveForms.createElement({
+  template: 'basicInput',
+  validationEvent: 'keyup',
+  validationValue: function (el, clean, template) {
+    return clean(el.value);
+  }
+});
+```
+
 The `basicForm` and `basicInput` templates are **included** with this package.
 
 See `templates:forms.html`.
