@@ -104,9 +104,11 @@ ReactiveForms.createElement({
 });
 ```
 
-The `basicForm` and `basicInput` templates are **included** with this package.
+The `basicForm` and `basicInput` templates are **included** with this package, however you still need to **register** them.
 
-See `templates:forms.html`.
+See `templates:forms.html` to see the code.
+
+You only need to register a given form block or element template once--each time it's rendered, it will have a unique context. For elements, they'll always be connected to the instance of the form block that contains them.
 
 ### API
 
