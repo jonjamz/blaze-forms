@@ -1,3 +1,8 @@
+1.5.1
+=====
+
+* Internal comparisons are now made with Underscore's `_.isEqual` method, for full type support.
+
 1.5.0
 =====
 

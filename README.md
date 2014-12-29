@@ -215,7 +215,7 @@ Element templates have access to the following helpers:
   * Initial data passed into the element doesn't trigger `changed`.
 * `{{submitted}}`
   * Lets us know if a parent ReactiveForms form block has been submitted yet.
-  * Used to wrap `{{errorMessage}}` to delay showing element invalidations until submit.
+  * Use this to wrap `{{errorMessage}}` to delay showing element invalidations until submit.
   * Defaults to *true* unless this template exists inside a ReactiveForms form block.
 * `{{loading}}`
   * Lets us know if a form action is currently running.
@@ -339,8 +339,8 @@ Form block templates have access to the following helpers:
   * Lets us know if a form action is currently running.
   * Use this to show a spinner or other loading indicator.
 * `{{changed}}`
-  * This is *true* if any valid value change has been made in the form.
-  * Initial data validation doesn't trigger `changed`.
+  * This is *true* if any valid value change has been made in the form since it was rendered.
+  * Initial data validation doesn't trigger `changed`, and neither do duplicate values.
 * `{{submitted}}`
   * This is *true* if the form has ever been submitted.
 

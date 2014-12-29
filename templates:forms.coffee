@@ -93,7 +93,7 @@
     self.setValidatedValue = (field, value) ->
 
       # First, opt into setting `changed` if this is a unique update.
-      if validatedValues[field] && !(value == validatedValues[field])
+      if validatedValues[field] && !_.isEqual(value, validatedValues[field])
         validatedValues[field] = value
         setChanged()
 
@@ -102,9 +102,9 @@
         validatedValues[field] = value
 
         # If initial data was provided--
-        # Initial validation shouldn't trigger `changed`.
+        # Initial validation passing back that value shouldn't trigger `changed`.
         if self.data.data
-          unless self.data.data[field] && self.data.data[field] is value
+          unless self.data.data[field] && _.isEqual(self.data.data[field], value)
             setChanged()
 
         # If no initial data was provided, trigger `changed` because it's a new value.
@@ -252,13 +252,12 @@
         # Initial value from passed-in data will get validated on render.
         # That shouldn't count as `changed`.
         # This fixes that, along with adding a general idempotency.
-        unless self.value.get() is value
+        unless _.isEqual(self.value.get(), value)
           self.value.set(value)
           self.changed.set(true)
 
         # Save to a parent form block if possible
         if self.isChild && parentData.setValidatedValue?
-          console.log('setting parent validated value')
           parentData.setValidatedValue(self.field, value)
 
       # Validation
