@@ -221,6 +221,13 @@ Element templates have access to the following helpers:
   * Lets us know if a form action is currently running.
   * Use this to disable changes to an element while the submit action is running.
   * Defauts to *false* unless this template exists inside a ReactiveForms form block.
+* `{{failed}}`
+  * This is *true* if a form action failed.
+  * Defaults to *false* unless this template exists inside a ReactiveForms form block.
+* `{{success}}`
+  * This is *true* if a form action was successful.
+  * Use this to hide things in the element after submission.
+  * Defaults to *true* unless this template exists inside a ReactiveForms form block.
 
 **Highlights**
 

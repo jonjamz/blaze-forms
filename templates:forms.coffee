@@ -145,6 +145,12 @@
     __loading__: ->
       return Template.instance().loading
 
+    __failed__: ->
+      return Template.instance().failed
+
+    __success__: ->
+      return Template.instance().success
+
     # These are used as real helpers
     # ------------------------------
 
@@ -203,6 +209,8 @@
         self.submit = parentData.submit || null
         self.submitted = parentData.submitted || null
         self.loading = parentData.loading || null
+        self.failed = parentData.failed || null
+        self.success = parentData.success || null
         self.schema = parentData.schema || null
         self.schemaContext = parentData.schemaContext || null
         initValue = parentData.data && parentData.data[self.field] || null
@@ -337,6 +345,20 @@
         return inst.loading.get()
       else
         return false
+
+    failed: ->
+      inst = Template.instance()
+      if inst.isChild
+        return inst.failed.get()
+      else
+        return false
+
+    success: -> # (Use to hide things after a successful submission)
+      inst = Template.instance()
+      if inst.isChild
+        return inst.success.get()
+      else
+        return true
 
 
 

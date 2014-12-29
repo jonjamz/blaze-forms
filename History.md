@@ -1,3 +1,9 @@
+1.4.0
+=====
+
+* Elements now have access to `failed` and `success` helpers.
+* This seemed important, particularly as `success` is useful for element cleanup after submission.
+
 1.3.0
 =====
 
