@@ -1,3 +1,10 @@
+1.2.0
+=====
+
+* Add `changed` helpers on both form blocks and elements.
+  * Starts `false`, sets to `true` when `validationEvent` is triggered and data passes validation.
+  * Initial data is validated on render, but `changed` isn't called during that time.
+
 1.1.7
 =====
 

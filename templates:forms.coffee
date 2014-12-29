@@ -42,10 +42,20 @@
     self.setValidatedValue = (field, value) ->
       validatedValues[field] = value
 
+      # If initial data was provided--
+      # Initial validation shouldn't trigger `changed`.
+      if self.data.data
+        data = self.data.data
+        unless data[field] && data[field] is value
+          self.changed.set(true)
+      else
+        self.changed.set(true)
+
     # States
     # ------
     # Set by the submit method below
 
+    self.changed   = new Blaze.ReactiveVar(false)
     self.submitted = new Blaze.ReactiveVar(false)
     self.failed    = new Blaze.ReactiveVar(false)
     self.success   = new Blaze.ReactiveVar(false)
@@ -154,6 +164,9 @@
     loading: ->
       return Template.instance().loading.get()
 
+    changed: ->
+      return Template.instance().changed.get()
+
 
 
   # Elements
@@ -175,6 +188,7 @@
       parentData = Template.parentData(1)
 
       self.valid = new Blaze.ReactiveVar(true)
+      self.changed = new Blaze.ReactiveVar(false)
       self.field = self.data.field || null
       self.isChild = parentData && parentData.submitted?
 
@@ -205,7 +219,12 @@
       # Save a value--usually after successful validation
       setValue = setValidatedValue = (value) ->
 
-        self.value.set(value)
+        # Initial value from passed-in data will get validated on render.
+        # That shouldn't count as `changed`.
+        # This fixes that, along with adding a general idempotency.
+        unless self.value.get() is value
+          self.value.set(value)
+          self.changed.set(true)
 
         # Save to a parent form block if possible
         if self.isChild && parentData.setValidatedValue?
@@ -297,6 +316,10 @@
     valid: -> # (Use to show positive state on element, like a check mark)
       inst = Template.instance()
       return inst.valid.get()
+
+    changed: -> # (Use to show or hide things after first valid value change)
+      inst = Template.instance()
+      return inst.changed.get()
 
     submitted: -> # (Use to delay showing errors until first submit)
       inst = Template.instance()

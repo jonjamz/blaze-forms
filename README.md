@@ -207,6 +207,10 @@ Element templates have access to the following helpers:
   * A reactive error message for this field, provided by *SimpleSchema*.
 * `{{valid}}`
   * Use this to show validation state on the element, for example a check mark.
+* `{{changed}}`
+  * This is *true* once the element's value has successfully changed.
+  * Use this to show or hide things until the first validated value change is made.
+  * Initial data passed into the element doesn't trigger `changed`.
 * `{{submitted}}`
   * Lets us know if a parent ReactiveForms form block has been submitted yet.
   * Used to wrap `{{errorMessage}}` to delay showing element invalidations until submit.
@@ -323,6 +327,9 @@ Form block templates have access to the following helpers:
 * `{{loading}}`
   * Lets us know if a form action is currently running.
   * Use this to show a spinner or other loading indicator.
+* `{{changed}}`
+  * This is *true* if any valid value change has been made in the form.
+  * Initial data validation doesn't trigger `changed`.
 
 **Highlights**
 
@@ -338,7 +345,7 @@ Here's the low-down on other Meteor forms packages and how they compare to this 
 
 **[AutoForm](https://github.com/aldeed/meteor-autoform)**
 
-> While AutoForm strives to offer every option under the sun, `templates:forms` is minimalist in nature--it 
+> While AutoForm strives to offer every option under the sun, `templates:forms` is minimalist in nature--it
 gives you what you need to build your own stuff, and doesn't make too many assumptions!
 
 * AutoForm is a much heavier package than `templates:forms`, as it aims to do much more.
