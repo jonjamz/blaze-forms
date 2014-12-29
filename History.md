@@ -1,3 +1,14 @@
+1.5.0
+=====
+
+* Improve default internal logic.
+  * Setting `changed` state on a form block instance to `true` by necessity changes `success`
+    and `submitted` states to `false`.
+  * Fix `setValidatedValue` method in form blocks, so that now it checks if the field has
+    been added to the form's data context before it checks if the field was in passed-in
+    data. This allows the method to run `changed` on field updates even if they contain the
+    same value that the passed-in data had. The focus is now on *unique from the last value*.
+
 1.4.0
 =====
 

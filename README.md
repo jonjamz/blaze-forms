@@ -348,6 +348,11 @@ Form block templates have access to the following helpers:
 
 > A form block's *failed*, *success*, *invalid*, and *loading* states are mutually exclusive.
 
+> When a form block's *changed* state becomes `true`, its *success* and *submitted* states become
+`false`. This makes it possible for users to edit and submit a given form many times in one session,
+if you should desire that functionality. Otherwise, use the *success* state as a way to reactively
+disable or remove elements.
+
 > ReactiveForms elements inside a form block affect the form's validity. They are reactively
 validated with *SimpleSchema* at the form-level, thanks to a shared schema context.
 

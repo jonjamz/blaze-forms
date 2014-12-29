@@ -33,24 +33,6 @@
       ctx = self.data.schema.newContext()
       self.schemaContext = ctx
 
-    # Values
-    # ------
-    # Store validated element values as local data (can't submit invalid data anyway)
-
-    validatedValues = {} # (non-reactive)
-
-    self.setValidatedValue = (field, value) ->
-      validatedValues[field] = value
-
-      # If initial data was provided--
-      # Initial validation shouldn't trigger `changed`.
-      if self.data.data
-        data = self.data.data
-        unless data[field] && data[field] is value
-          self.changed.set(true)
-      else
-        self.changed.set(true)
-
     # States
     # ------
     # Set by the submit method below
@@ -87,10 +69,47 @@
       self.failed.set(false)
       self.success.set(false)
 
+    # As `success` represents the end of a form session, a subsequent `change` should
+    # initiate a new session, if the UI is still editable.
+
+    # Although, a successful `change` of one value doesn't negate `invalid` or `failed`.
+    # The reactive computation below kills `invalid` when all keys become valid.
+    setChanged = ->
+      self.changed.set(true)
+      self.success.set(false)
+      self.submitted.set(false)
+
     # When a user fixes the invalid fields, clear invalid state
     self.autorun ->
       if !self.schemaContext.invalidKeys().length
         self.invalid.set(false)
+
+    # Values
+    # ------
+    # Store validated element values as local data (can't submit invalid data anyway)
+
+    validatedValues = {} # (non-reactive)
+
+    self.setValidatedValue = (field, value) ->
+
+      # First, opt into setting `changed` if this is a unique update.
+      if validatedValues[field] && !(value == validatedValues[field])
+        validatedValues[field] = value
+        setChanged()
+
+      # If the field doesn't exist in validatedValues yet, add it.
+      else
+        validatedValues[field] = value
+
+        # If initial data was provided--
+        # Initial validation shouldn't trigger `changed`.
+        if self.data.data
+          unless self.data.data[field] && self.data.data[field] is value
+            setChanged()
+
+        # If no initial data was provided, trigger `changed` because it's a new value.
+        else
+          setChanged()
 
     # Submit
     # ------
@@ -239,6 +258,7 @@
 
         # Save to a parent form block if possible
         if self.isChild && parentData.setValidatedValue?
+          console.log('setting parent validated value')
           parentData.setValidatedValue(self.field, value)
 
       # Validation
