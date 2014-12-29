@@ -12,7 +12,7 @@ Validation is handled using [SimpleSchemas](https://github.com/aldeed/meteor-sim
 
 This package provides you with two **template factories** that take simple templates that you create and turn them into robust form components. Components can be used alone, but their real power comes from being used together.
 
-[View the live example](http://forms-example.meteor.com/).
+[View the live example](http://forms-example.meteor.com/) featuring Bootstrap 3 and the `sacha:spin` package, with full code.
 
 Install
 -------
