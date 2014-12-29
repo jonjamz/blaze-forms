@@ -76,8 +76,12 @@
     # The reactive computation below kills `invalid` when all keys become valid.
     setChanged = ->
       self.changed.set(true)
-      self.success.set(false)
-      self.submitted.set(false)
+
+      # If `success` state is active, disable it and `submitted` to refresh the session.
+      # Don't let `changed` affect `submitted` except for when `success` is true.
+      if self.success.get() is true
+        self.success.set(false)
+        self.submitted.set(false)
 
     # When a user fixes the invalid fields, clear invalid state
     self.autorun ->

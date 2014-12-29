@@ -330,6 +330,7 @@ Form block templates have access to the following helpers:
   * This is *true* if the last attempt to run the form action failed.
 * `{{success}}`
   * This is *true* if the last attempt to run the form action was a success.
+  * Use this to hide elements or otherwise end the form's session.
 * `{{invalid}}`
   * This is *true* if any ReactiveForms element in the form block is invalid.
 * `{{invalidCount}}`
@@ -348,10 +349,10 @@ Form block templates have access to the following helpers:
 
 > A form block's *failed*, *success*, *invalid*, and *loading* states are mutually exclusive.
 
-> When a form block's *changed* state becomes `true`, its *success* and *submitted* states become
-`false`. This makes it possible for users to edit and submit a given form many times in one session,
-if you should desire that functionality. Otherwise, use the *success* state as a way to reactively
-disable or remove elements.
+> When a form block's *success* state is `true`, setting its *changed* state to `true` will cause
+both its *success* and *submitted* states to become `false`. This makes it possible for users to
+edit and submit a given form many times in one session--just keep the editable elements
+accessible in the UI after the first *success* (or provide a button that triggers the *changed* state).
 
 > ReactiveForms elements inside a form block affect the form's validity. They are reactively
 validated with *SimpleSchema* at the form-level, thanks to a shared schema context.

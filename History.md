@@ -1,3 +1,12 @@
+1.5.2
+=====
+
+* Revisit change from v1.5.0 where setting the `changed` state to `true` changes `submitted` and
+  `success` states to `false`.
+  * Only change `submitted` state to false if `success` state is also true at the time `changed`
+    is set to true. This better serves the original use case, and hopefully avoids unexpected
+    functionality.
+
 1.5.1
 =====
 
