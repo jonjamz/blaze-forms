@@ -274,6 +274,8 @@ Here's an example of a ReactiveForms form block template.
         submit=__submit__
         submitted=__submitted__
         loading=__loading__
+        failed=__failed__
+        success=__success__
     }}
 
     <!-- The below helpers represent exclusive states,
