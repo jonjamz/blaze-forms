@@ -330,6 +330,8 @@ Form block templates have access to the following helpers:
 * `{{changed}}`
   * This is *true* if any valid value change has been made in the form.
   * Initial data validation doesn't trigger `changed`.
+* `{{submitted}}`
+  * This is *true* if the form has ever been submitted.
 
 **Highlights**
 

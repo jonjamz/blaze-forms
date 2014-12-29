@@ -167,6 +167,9 @@
     changed: ->
       return Template.instance().changed.get()
 
+    submitted: ->
+      return Template.instance().submitted.get()
+
 
 
   # Elements

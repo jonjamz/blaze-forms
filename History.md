@@ -1,3 +1,8 @@
+1.3.0
+=====
+
+* Add `submitted` helper to form blocks.
+
 1.2.0
 =====
 
