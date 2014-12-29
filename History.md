@@ -1,3 +1,8 @@
+1.1.7
+=====
+
+* Fix typo. Action function had `callbacks.falied` instead of `callbacks.failed`.
+
 1.1.0
 =====
 

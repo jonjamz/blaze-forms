@@ -104,7 +104,7 @@
       formElements = self.findAll('.reactive-element')
       callbacks =
         success: setSuccess
-        falied: setFailed
+        failed: setFailed
 
       self.data.action.call(validatedValues, formElements, callbacks)
 
