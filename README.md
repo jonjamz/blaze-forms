@@ -52,9 +52,9 @@ This package works on the client-side only.
 Usage
 -----
 
-### Getting Started
+#### Provide a schema and an action function.
 
-**1. Provide a schema and an action function using a parent template's helpers**.
+Define these in a parent template, or in global helpers.
 
 ```javascript
 Template['testForm'].helpers({
@@ -86,8 +86,8 @@ The **action function** runs when the form is submitted. It takes two params, as
   * You can also use this to clear each element's value after the form has successfully been submitted.
 * `callbacks`
   * This contains two methods to trigger the form's state.
-  * Running `callbacks.success()` --> Sets `success`.
-  * Running `callbacks.failed()`  --> Sets `failed`.
+  * Running `callbacks.success()` sets `success`.
+  * Running `callbacks.failed()`  sets `failed`.
   * The form's `{{loading}}` state (see below) will run from the time you submit to the time you call one of these.
 
 Also, all validated form values are available with no extra work from `this`:
@@ -104,7 +104,7 @@ Data from elements passed into the action function is **guaranteed to be valid**
 
 Hopefully, this satisfies your needs.
 
-**2. Add ReactiveForms components to the parent template**.
+#### Add ReactiveForms components.
 
 The `basicForm` and `basicInput` templates are included with this package.
 
@@ -119,7 +119,7 @@ The `basicForm` and `basicInput` templates are included with this package.
 
 See `templates:forms.html` to view the code.
 
-**3. Register the ReactiveForms components**.
+#### Register the ReactiveForms components if needed.
 
 This is where you configure the components.
 
@@ -139,14 +139,15 @@ You only need to register a given component **once**.
 
 Each time a component is rendered, it will have a unique context. Elements inside a form block will always be connected to the **instance** of the form block that contains them.
 
-### API
+API
+---
 
 ReactiveForms has only two API endpoints.
 
 Add any custom template that satisfies the basic requirements (outlined below), and you're
 ready to go!
 
-#### ReactiveForms.createElement
+### ReactiveForms.createElement
 
 Create a ReactiveForms element from a compatible template.
 
@@ -170,7 +171,7 @@ ReactiveForms.createElement({
 });
 ```
 
-**Element template requirements**
+#### Element template requirements.
 
 * Template must contain one *form element*, for example `<input>`.
 * The form element must:
@@ -215,7 +216,7 @@ Here's what changes when this happens:
 * Elements *get access to form-level state*, enabling helpers like `{{loading}}`.
 * Element values that pass validation are stored in *form-level data context*.
 
-**Element template helpers**
+#### Element template helpers.
 
 Element templates have access to the following *local* helpers:
 
@@ -266,7 +267,7 @@ However, you can override specific properties on an element when you invoke it:
 {{> basicInput schema=schema field='testField' submitted=true}}
 ```
 
-**Highlights**
+#### Highlights.
 
 > When running standalone (without being wrapped in a form block) you'll put the schema on the
 element's template invocation. You can also override the other form-level helpers on elements this way.
@@ -274,7 +275,7 @@ element's template invocation. You can also override the other form-level helper
 > Be sure to add the reactive-element class to your element so that it's selected when the form action is run.
 
 
-#### ReactiveForms.createForm
+### ReactiveForms.createForm
 
 Create a ReactiveForms form block from a compatible template.
 
@@ -285,7 +286,7 @@ ReactiveForms.createForm({
 });
 ```
 
-**Form block template requirements**
+#### Form block template requirements.
 
 * Template code must be *wrapped in a form tag*.
 * Template must contain UI.contentBlock with the proper fields (as below).
@@ -359,7 +360,7 @@ reactively validated with *SimpleSchema*:
 If you do this, you can trust that the data passed to your action function is already valid.
 All you'll need to do then is get the data from the form elements and save it somewhere!
 
-**Form block template helpers**
+#### Form block template helpers.
 
 Form block templates have access to the following helpers:
 
@@ -386,7 +387,7 @@ Form block templates have access to the following helpers:
   * Use this to hide elements or otherwise end the form's session.
 
 
-**Highlights**
+#### Highlights.
 
 > A form block's *failed*, *success*, *invalid*, and *loading* states are mutually exclusive.
 
