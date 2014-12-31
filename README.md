@@ -6,7 +6,6 @@ Build production-ready, reactive forms in minutes. Convert simple templates into
 #### Facts
 
 * Low-complexity, flexible, and reliable.
-* Built with Meteor's basic Template API, no surprises.
 * Workflow reduced to a small set of template helpers.
 * Forms built using inherently custom, instance-scoped, reusable components.
 * Validation handled using [SimpleSchemas](https://github.com/aldeed/meteor-simple-schema)--however, these are not required.
