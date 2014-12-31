@@ -373,8 +373,7 @@ Form block templates have access to the following helpers:
 * `{{changed}}`
   * This is *true* if any valid value change has been made in the form block since it was rendered.
   * Initial data validation doesn't trigger `changed`, and neither do duplicate values.
-  * If `changed` is triggered after a form block has `success`, it resets `submitted`
-    and `success` to `false`.
+  * If `changed` is triggered after `success`, it resets `submitted` and `success` to `false`.
 * `{{submitted}}`
   * This is *true* if the form has ever been submitted.
   * Submission requires all form elements to be valid.
