@@ -1,13 +1,13 @@
 About
 -----
 
-Build production-ready, reactive forms in minutes. Turn simple templates into robust form components that work together transparently. Complex workflows can be achieved with just a few lines of code.
+Build production-ready, reactive forms in minutes. Even complex workflows can be achieved with just a few lines of code.
 
 #### Facts
 
-* Low-complexity, flexible and reliable.
-* Architecture restricted to fit within Meteor's standard Template API.
-* Development workflow centered around template helpers.
+* Low-complexity architecture.
+* Easy development using template helpers and reusable components.
+* Works within Meteor's standard Template API, so things work as they should.
 * Validation handled using [SimpleSchemas](https://github.com/aldeed/meteor-simple-schema)--however, these are not required.
 
 #### Overview
@@ -17,11 +17,11 @@ This package supports two types of reusable form components:
 * **Elements**
 * **Form Blocks**
 
-***Elements*** represent single form fields, while ***Form Blocks*** are containers that control workflow and handle submission. Each type has its own set of reactive states, used to control the experience, workflow, and functionality of a given form through template helpers.
+While ***elements*** represent single form fields, ***form blocks*** are containers that control workflow and handle submission. Each type has its own set of reactive states, used to control the experience, workflow, and functionality of a given form through template helpers.
 
 Any compatible template can be transformed into one of the above components using the provided API--and either type of component be use used standalone. But, as you'll see, the real power comes from using the two types of components together.
 
-*Create a component by registering a normal Meteor template*
+*Create a component by registering a normal Meteor template.*
 
 ```javascript
 ReactiveForms.createElement({
@@ -30,7 +30,7 @@ ReactiveForms.createElement({
 });
 ```
 
-*Reuse the component anywhere--each instance is self-contained*
+*Reuse the component anywhere--each instance is self-contained.*
 
 ```handlebars
 {{> basicInput schema=schema field='firstName'}}
@@ -44,7 +44,7 @@ ReactiveForms.createElement({
 
 Built with Bootstrap 3 and the `sacha:spin` package, it demonstrates how flexible and extensible this package is. 
 
-Browse the full code--nicely formatted thanks to the `code-prettify` package. 
+All code is there on the site.
 
 See how simple it is to build an engaging form flow in a very _Meteor_ way!
 
