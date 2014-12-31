@@ -14,20 +14,24 @@ Validation is handled using [SimpleSchemas](https://github.com/aldeed/meteor-sim
 
 This package provides you with two **template factories** that take simple templates that you create and turn them into robust form components.
 
-Components include:
+There are two types of components:
 
 * Elements.
+  * From simple wrapped HTML form elements to complex custom widgets.
 * Form Blocks.
+  * Containers that track internal changes, handle submission states, and store valid data. 
 
-These can be used standalone, but their real power comes from being used together.
+All components are reusable, individually-scoped, and take advantage of the latest Template API updates.
+
+They can be used standalone, but their real power comes from being used together.
 
 **Example**
 
 [View the live example](http://forms-example.meteor.com/).
 
-It was built with Bootstrap 3 and the `sacha:spin` package.
+It was built with Bootstrap 3 and the `sacha:spin` package. All code is visible there, nicely formatted thanks to the `code-prettify` package. 
 
-All code is visible there, nicely formatted thanks to the `code-prettify` package. You'll see how simple it is to build an awesome form flow in a very _Meteor_-like way!
+See how simple it is to build an engaging form flow in a very _Meteor_ way!
 
 Install
 -------
