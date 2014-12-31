@@ -1,7 +1,7 @@
 About
 -----
 
-Build production-ready, reactive forms in minutes. Convert simple templates into robust form components using the provided API. 
+Build production-ready, reactive forms in minutes. Turn simple templates into robust form components using the provided API.
 
 #### Facts
 
