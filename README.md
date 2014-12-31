@@ -10,22 +10,23 @@ Build reactive forms:
 
 Validation is handled using [SimpleSchemas](https://github.com/aldeed/meteor-simple-schema)--however, these are not required.
 
-**Components**
+#### Components
 
-This package contains **template factories** that turn simple templates into robust form components.
-
-There are two types of components:
+This package contains **template factories** for two types of components:
 
 * Elements.
-  * From simple wrapped HTML form elements to complex custom widgets.
+  * Templates that provide a value for one form field.
+  * Can be a simple wrapped HTML element, or a complex custom widget. It's your choice.
 * Form Blocks.
   * Containers that track internal changes, handle submission states, and store valid data. 
+
+Factories take simple templates that you create and transform them into components.
 
 All components are reusable, individually-scoped, and take advantage of the latest Template API updates.
 
 They can be used standalone, but their real power comes from being used together.
 
-**Example**
+#### Examples
 
 [View the live example](http://forms-example.meteor.com/).
 
