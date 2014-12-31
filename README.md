@@ -12,10 +12,10 @@ Validation is handled using [SimpleSchemas](https://github.com/aldeed/meteor-sim
 
 #### Overview
 
-This package contains ***template factories*** for two types of components:
+This package contains ***factories*** for two types of template components:
 
-* **Elements**. Simple wrapped HTML form elements, or complex custom widgets. Either works!
-* **Form Blocks**. Containers that track state, handle submission, and store valid data. 
+* **Elements**. Self-contained templates that represent a single form field.
+* **Form Blocks**. Surrounding block helpers that control form and submission flow. 
 
 Create a component by registering a normal Meteor template with a factory.
 
@@ -32,7 +32,7 @@ Once created, components are used like anything else. *They just work*.
 {{> basicInput schema=schema field='testField'}}
 ```
 
-Either type can be used standalone, but their real power comes from being used together.
+Elements and form blocks can be used standalone, but their real power comes from being used together.
 
 #### Examples
 
