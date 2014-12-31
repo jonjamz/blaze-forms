@@ -1,7 +1,7 @@
 About
 -----
 
-Build production-ready, reactive forms in minutes. Turn simple templates into robust form components that work together transparently. Even complex workflows can be achieved with a few lines of code.
+Build production-ready, reactive forms in minutes. Turn simple templates into robust form components that work together transparently. Complex workflows can be achieved with just a few lines of code.
 
 #### Facts
 
