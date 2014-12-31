@@ -6,9 +6,9 @@ Build production-ready, reactive forms in minutes. Even complex workflows can be
 #### Facts
 
 * Low-complexity architecture.
-* Easy development using template helpers and reusable components.
-* Works within Meteor's standard Template API, so things work as they should.
-* Validation handled using [SimpleSchemas](https://github.com/aldeed/meteor-simple-schema)--however, these are not required.
+* Easy development using template helpers and reusable custom components.
+* Works as expected--built with Meteor's standard Template API.
+* Uses [SimpleSchemas](https://github.com/aldeed/meteor-simple-schema) for reactive validation, if provided.
 
 #### Overview
 
