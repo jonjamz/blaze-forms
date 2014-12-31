@@ -1,7 +1,7 @@
 About
 -----
 
-Build production-ready, reactive forms *in minutes*. Validation is handled using [SimpleSchemas](https://github.com/aldeed/meteor-simple-schema)--however, these are not required.
+Build production-ready, reactive forms in minutes. Validation is handled using [SimpleSchemas](https://github.com/aldeed/meteor-simple-schema)--however, these are not required.
 
 #### Overview
 
@@ -10,14 +10,11 @@ This package supports two types of reusable forms components:
 * **Elements**.
 * **Form Blocks**.
 
-Elements are single, reactively-validated form fields. Form blocks are containers that control form and submission flow. 
-These components can both be used standalone, but their real power comes from being used together.
+Elements represent single form fields, while form blocks are containers that control workflow and handle submission. Each has its own set of reactive states, available as template helpers. These are used to control the experience, workflow, and functionality of a given form. 
 
-Each type of component has its own set of reactive states, available as template helpers. These are used to control the experience, workflow, and functionality of a given form.
+Any compatible template can be transformed into one of the above components using the provided API--and either type of component be use used standalone. But, as you'll see, the real power comes from using the two types of components together.
 
-
-
-Create a component by registering a normal Meteor template with ReactiveForms.
+**Create a component by registering a normal Meteor template.**
 
 ```javascript
 ReactiveForms.createElement({
@@ -26,10 +23,12 @@ ReactiveForms.createElement({
 });
 ```
 
-Once created, components are used like anything else. *They just work*.
+**Reuse the component anywhere--each instance is self-contained.**
 
 ```handlebars
-{{> basicInput schema=schema field='testField'}}
+{{> basicInput schema=schema field='firstName'}}
+{{> basicInput schema=schema field='lastName'}}
+{{> basicInput schema=schema field='email'}}
 ```
 
 #### Examples
