@@ -1,23 +1,27 @@
 About
 -----
 
-Build reactive forms:
+Build production-ready, reactive forms in minutes. Even complex workflows can be achieved with just a few lines of code.
 
-* *in minutes*.
-* *for production use*.
-* *with reusable custom components*.
-* *that work the way they should*.
+#### Facts
 
-Validation is handled using [SimpleSchemas](https://github.com/aldeed/meteor-simple-schema)--however, these are not required.
+* Low-complexity architecture.
+* Easy development using template helpers and reusable custom components.
+* Built with Meteor's standard Template API for maximum compatibility.
+* Uses [SimpleSchemas](https://github.com/aldeed/meteor-simple-schema) for reactive validation, if provided.
 
 #### Overview
 
-Forms are comprised of two types of components:
+This package supports two types of reusable form components:
 
-* **Elements**. Self-contained templates that represent a single form field.
-* **Form Blocks**. Surrounding block helpers that control form and submission flow. 
+* **Elements**
+* **Form Blocks**
 
-Create a component by registering a normal Meteor template with ReactiveForms.
+While ***elements*** represent single form fields, ***form blocks*** are containers that control workflow and handle submission. Each type has its own set of reactive states, used to control the experience, workflow, and functionality of a given form through template helpers.
+
+Any compatible template can be transformed into one of the above components using the provided API--and either type of component be use used standalone. But, as you'll see, the real power comes from using the two types of components together.
+
+*Create a component by registering a normal Meteor template.*
 
 ```javascript
 ReactiveForms.createElement({
@@ -26,19 +30,21 @@ ReactiveForms.createElement({
 });
 ```
 
-Once created, components are used like anything else. *They just work*.
+*Reuse the component anywhere--each instance is self-contained.*
 
 ```handlebars
-{{> basicInput schema=schema field='testField'}}
+{{> basicInput schema=schema field='firstName'}}
+{{> basicInput schema=schema field='lastName'}}
+{{> basicInput schema=schema field='email'}}
 ```
-
-Elements and form blocks can be used standalone, but their real power comes from being used together.
 
 #### Examples
 
-[View the live example](http://forms-example.meteor.com/).
+[View the Live Example](http://forms-example.meteor.com/)
 
-It was built with Bootstrap 3 and the `sacha:spin` package. All code is visible there, nicely formatted thanks to the `code-prettify` package. 
+Built with Bootstrap 3 and the `sacha:spin` package, it demonstrates how flexible and extensible this package is. 
+
+All code is there on the site.
 
 See how simple it is to build an engaging form flow in a very _Meteor_ way!
 
@@ -147,7 +153,7 @@ ReactiveForms has only two API endpoints.
 Add any custom template that satisfies the basic requirements (outlined below), and you're
 ready to go!
 
-### ReactiveForms.createElement
+### *ReactiveForms.createElement()*
 
 Create a ReactiveForms element from a compatible template.
 
@@ -275,7 +281,7 @@ element's template invocation. You can also override the other form-level helper
 > Be sure to add the reactive-element class to your element so that it's selected when the form action is run.
 
 
-### ReactiveForms.createForm
+### *ReactiveForms.createForm()*
 
 Create a ReactiveForms form block from a compatible template.
 
@@ -372,8 +378,7 @@ Form block templates have access to the following helpers:
 * `{{changed}}`
   * This is *true* if any valid value change has been made in the form block since it was rendered.
   * Initial data validation doesn't trigger `changed`, and neither do duplicate values.
-  * If `changed` is triggered after a form block has `success` state, it resets the `submitted`
-    and `success` states to `false`.
+  * If `changed` is triggered after `success`, it resets `submitted` and `success` to `false`.
 * `{{submitted}}`
   * This is *true* if the form has ever been submitted.
   * Submission requires all form elements to be valid.
