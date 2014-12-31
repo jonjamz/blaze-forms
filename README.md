@@ -12,20 +12,31 @@ Validation is handled using [SimpleSchemas](https://github.com/aldeed/meteor-sim
 
 #### Overview
 
-This package contains **template factories** for two types of components:
+This package contains *template factories* for two types of components:
 
-* Elements.
-  * A simple wrapped HTML element, or a complex custom widget. It's your choice.
-* Form Blocks.
+* **Elements.**
+  * Simple wrapped HTML form elements, or complex custom widgets. It's your choice.
+* **Form Blocks.**
   * Containers that track internal changes, handle submission states, and store valid data. 
 
-Components are reusable, individually-scoped, and work with the latest Template API updates. 
+Create a component by registering a normal Meteor template with a factory.
 
-They can be used standalone, but their real power comes from being used together.
+```javascript
+ReactiveForms.createElement({
+  template: 'basicInput',
+  validationEvent: 'keyup'
+});
+```
 
-> **What's a factory?**
->
->Factories take simple templates that you create and transform them into the above components, wiring together all the functionality and capability that you'll learn about here.
+Once created, components are used like anything else.
+
+```handlebars
+{{> basicInput schema=schema field='testField'}}
+```
+
+They're reusable, individually-scoped, and *just work*. 
+
+Either type can be used standalone, but their real power comes from being used together.
 
 #### Examples
 
