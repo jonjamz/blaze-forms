@@ -10,14 +10,14 @@ Build reactive forms:
 
 Validation is handled using [SimpleSchemas](https://github.com/aldeed/meteor-simple-schema)--however, these are not required.
 
-#### Overview
+#### Basics
 
-This package contains ***factories*** for two types of template components:
+Forms are comprised of two types of reusable custom components:
 
 * **Elements**. Self-contained templates that represent a single form field.
 * **Form Blocks**. Surrounding block helpers that control form and submission flow. 
 
-Create a component by registering a normal Meteor template with a factory.
+Create a component by registering a normal Meteor template with ReactiveForms.
 
 ```javascript
 ReactiveForms.createElement({
