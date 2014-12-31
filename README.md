@@ -3,21 +3,22 @@ About
 
 Build reactive forms:
 
-* *in minutes*.
-* *for production use*.
-* *with reusable custom components*.
-* *that work the way they should*.
+* *In minutes*.
+* *For production use*.
+* *With reusable custom components*.
+* *That work the way they should*.
 
 Validation is handled using [SimpleSchemas](https://github.com/aldeed/meteor-simple-schema)--however, these are not required.
 
 #### Overview
 
-This package contains *template factories* for two types of components:
+This package contains ***template factories*** for two types of components:
 
-* **Elements.**
-  * Simple wrapped HTML form elements, or complex custom widgets. It's your choice.
-* **Form Blocks.**
-  * Containers that track internal changes, handle submission states, and store valid data. 
+* **Elements**
+> Simple wrapped HTML form elements, or complex custom widgets. Either works!
+
+* **Form Blocks**
+> Containers that track internal changes, handle submission states, and store valid data. 
 
 Create a component by registering a normal Meteor template with a factory.
 
@@ -28,13 +29,11 @@ ReactiveForms.createElement({
 });
 ```
 
-Once created, components are used like anything else.
+Once created, components are used like anything else. *They just work*.
 
 ```handlebars
 {{> basicInput schema=schema field='testField'}}
 ```
-
-They're reusable, individually-scoped, and *just work*. 
 
 Either type can be used standalone, but their real power comes from being used together.
 
