@@ -52,7 +52,7 @@ This package works on the client-side only.
 Usage
 -----
 
-#### Provide a schema and an action function.
+#### 1. Provide a schema and an action function.
 
 Define these in a parent template, or in global helpers.
 
@@ -104,7 +104,7 @@ Data from elements passed into the action function is **guaranteed to be valid**
 
 Hopefully, this satisfies your needs.
 
-#### Add ReactiveForms components.
+#### 2. Add ReactiveForms components.
 
 The `basicForm` and `basicInput` templates are included with this package.
 
@@ -119,7 +119,7 @@ The `basicForm` and `basicInput` templates are included with this package.
 
 See `templates:forms.html` to view the code.
 
-#### Register the ReactiveForms components if needed.
+#### 3. Register the ReactiveForms components if needed.
 
 This is where you configure the components.
 
@@ -171,7 +171,7 @@ ReactiveForms.createElement({
 });
 ```
 
-#### Element template requirements.
+#### Element template requirements
 
 * Template must contain one *form element*, for example `<input>`.
 * The form element must:
@@ -216,7 +216,7 @@ Here's what changes when this happens:
 * Elements *get access to form-level state*, enabling helpers like `{{loading}}`.
 * Element values that pass validation are stored in *form-level data context*.
 
-#### Element template helpers.
+#### Element template helpers
 
 Element templates have access to the following *local* helpers:
 
@@ -267,7 +267,7 @@ However, you can override specific properties on an element when you invoke it:
 {{> basicInput schema=schema field='testField' submitted=true}}
 ```
 
-#### Highlights.
+#### Highlights
 
 > When running standalone (without being wrapped in a form block) you'll put the schema on the
 element's template invocation. You can also override the other form-level helpers on elements this way.
@@ -286,7 +286,7 @@ ReactiveForms.createForm({
 });
 ```
 
-#### Form block template requirements.
+#### Form block template requirements
 
 * Template code must be *wrapped in a form tag*.
 * Template must contain UI.contentBlock with the proper fields (as below).
@@ -360,7 +360,7 @@ reactively validated with *SimpleSchema*:
 If you do this, you can trust that the data passed to your action function is already valid.
 All you'll need to do then is get the data from the form elements and save it somewhere!
 
-#### Form block template helpers.
+#### Form block template helpers
 
 Form block templates have access to the following helpers:
 
@@ -387,7 +387,7 @@ Form block templates have access to the following helpers:
   * Use this to hide elements or otherwise end the form's session.
 
 
-#### Highlights.
+#### Highlights
 
 > A form block's *failed*, *success*, *invalid*, and *loading* states are mutually exclusive.
 
