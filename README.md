@@ -1,7 +1,7 @@
 About
 -----
 
-Build production-ready, reactive forms in minutes. Validation is handled using [SimpleSchemas](https://github.com/aldeed/meteor-simple-schema)--however, these are not required.
+Build production-ready, reactive forms in minutes, using simple templates. Validation is handled using [SimpleSchemas](https://github.com/aldeed/meteor-simple-schema)--however, these are not required.
 
 #### Overview
 
@@ -10,7 +10,7 @@ This package supports two types of reusable forms components:
 * **Elements**.
 * **Form Blocks**.
 
-*Elements* represent single form fields, while *form blocks* are containers that control workflow and handle submission. Each type has its own set of reactive states, used to control the experience, workflow, and functionality of a given form. States are available as template helpers.
+***Elements*** represent single form fields, while ***form blocks*** are containers that control workflow and handle submission. Each type has its own set of reactive states, used to control the experience, workflow, and functionality of a given form through template helpers.
 
 Any compatible template can be transformed into one of the above components using the provided API--and either type of component be use used standalone. But, as you'll see, the real power comes from using the two types of components together.
 
