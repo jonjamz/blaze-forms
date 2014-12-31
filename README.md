@@ -14,11 +14,9 @@ Validation is handled using [SimpleSchemas](https://github.com/aldeed/meteor-sim
 
 This package contains ***template factories*** for two types of components:
 
-* **Elements**
-> Simple wrapped HTML form elements, or complex custom widgets. Either works!
+* **Elements**. Simple wrapped HTML form elements, or complex custom widgets. Either works!
 
-* **Form Blocks**
-> Containers that track internal changes, handle submission states, and store valid data. 
+* **Form Blocks**. Containers that track state, handle submission, and store valid data. 
 
 
 
