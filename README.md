@@ -1,6 +1,5 @@
 About
 -----
-#### Summary
 
 Build production-ready, reactive forms in minutes. Convert simple templates into robust forms components using the provided API. 
 
@@ -10,14 +9,14 @@ Validation is handled using [SimpleSchemas](https://github.com/aldeed/meteor-sim
 
 This package supports two types of reusable forms components:
 
-* **Elements**.
-* **Form Blocks**.
+* **Elements**
+* **Form Blocks**
 
 ***Elements*** represent single form fields, while ***form blocks*** are containers that control workflow and handle submission. Each type has its own set of reactive states, used to control the experience, workflow, and functionality of a given form through template helpers.
 
 Any compatible template can be transformed into one of the above components using the provided API--and either type of component be use used standalone. But, as you'll see, the real power comes from using the two types of components together.
 
-*Create a component by registering a normal Meteor template.*
+*Create a component by registering a normal Meteor template*
 
 ```javascript
 ReactiveForms.createElement({
@@ -26,7 +25,7 @@ ReactiveForms.createElement({
 });
 ```
 
-*Reuse the component anywhere--each instance is self-contained.*
+*Reuse the component anywhere--each instance is self-contained*
 
 ```handlebars
 {{> basicInput schema=schema field='firstName'}}
@@ -36,7 +35,7 @@ ReactiveForms.createElement({
 
 #### Examples
 
-[View the live example](http://forms-example.meteor.com/).
+[View the Live Example](http://forms-example.meteor.com/)
 
 Built with Bootstrap 3 and the `sacha:spin` package, it demonstrates how flexible and extensible this package is. 
 
