@@ -1,7 +1,9 @@
 About
 -----
 
-Build production-ready, reactive forms ***in minutes***. Validation is handled using [SimpleSchemas](https://github.com/aldeed/meteor-simple-schema)--however, these are not required.
+*Build production-ready, reactive forms in minutes.* 
+
+Validation is handled using [SimpleSchemas](https://github.com/aldeed/meteor-simple-schema)--however, these are not required.
 
 #### Overview
 
@@ -14,7 +16,7 @@ Elements represent single form fields, while form blocks are containers that con
 
 Any compatible template can be transformed into one of the above components using the provided API--and either type of component be use used standalone. But, as you'll see, the real power comes from using the two types of components together.
 
-***Create a component by registering a normal Meteor template.***
+*Create a component by registering a normal Meteor template.*
 
 ```javascript
 ReactiveForms.createElement({
@@ -23,7 +25,7 @@ ReactiveForms.createElement({
 });
 ```
 
-***Reuse the component anywhere--each instance is self-contained.***
+*Reuse the component anywhere--each instance is self-contained.*
 
 ```handlebars
 {{> basicInput schema=schema field='firstName'}}
