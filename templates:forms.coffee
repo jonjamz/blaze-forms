@@ -168,9 +168,6 @@
     __loading__: ->
       return Template.instance().loading
 
-    __failed__: ->
-      return Template.instance().failed
-
     __success__: ->
       return Template.instance().success
 
@@ -178,8 +175,7 @@
     # ------------------------------
 
     failed: ->
-      inst = Template.instance()
-      return inst.failed.get()
+      return Template.instance().failed.get()
 
     success: ->
       return Template.instance().success.get()
@@ -222,7 +218,7 @@
       self.valid = new Blaze.ReactiveVar(true)
       self.changed = new Blaze.ReactiveVar(false)
       self.field = self.data.field || null
-      self.isChild = parentData && parentData.submitted?
+      self.isChild = parentData && parentData.submit?
 
       # Setup
       # -----
@@ -232,7 +228,6 @@
         self.submit = parentData.submit || null
         self.submitted = parentData.submitted || null
         self.loading = parentData.loading || null
-        self.failed = parentData.failed || null
         self.success = parentData.success || null
         self.schema = parentData.schema || null
         self.schemaContext = parentData.schemaContext || null
@@ -332,6 +327,21 @@
       inst = Template.instance()
       return inst.value.get()
 
+    valid: -> # (Use to show positive state on element, like a check mark)
+      inst = Template.instance()
+      return inst.valid.get()
+
+    changed: -> # (Use to show or hide things after first valid value change)
+      inst = Template.instance()
+      return inst.changed.get()
+
+    isChild: -> # (Use to show or hide things regardless of parent state)
+      inst = Template.instance()
+      return inst.isChild
+
+    # These are from SimpleSchema functionality
+    # -----------------------------------------
+
     label: ->
       inst = Template.instance()
       if inst.schema? and inst.field?
@@ -347,41 +357,30 @@
       if inst.schemaContext? and inst.field?
         return inst.schemaContext.keyErrorMessage(inst.field)
 
-    valid: -> # (Use to show positive state on element, like a check mark)
-      inst = Template.instance()
-      return inst.valid.get()
-
-    changed: -> # (Use to show or hide things after first valid value change)
-      inst = Template.instance()
-      return inst.changed.get()
+    # These are from the parent form block
+    # ------------------------------------
+    # Default to `false` if no form block exists.
 
     submitted: -> # (Use to delay showing errors until first submit)
       inst = Template.instance()
       if inst.isChild
         return inst.submitted.get()
       else
-        return true
+        return inst.data.submitted || false
 
     loading: -> # (Use to disable elements while submit action is running)
       inst = Template.instance()
       if inst.isChild
         return inst.loading.get()
       else
-        return false
-
-    failed: ->
-      inst = Template.instance()
-      if inst.isChild
-        return inst.failed.get()
-      else
-        return false
+        return inst.data.loading || false
 
     success: -> # (Use to hide things after a successful submission)
       inst = Template.instance()
       if inst.isChild
         return inst.success.get()
       else
-        return true
+        return inst.data.success || false
 
 
 

@@ -10,9 +10,16 @@ Build reactive forms:
 
 Validation is handled using [SimpleSchemas](https://github.com/aldeed/meteor-simple-schema)--however, these are not required.
 
-This package provides you with two **template factories** that take simple templates that you create and turn them into robust form components. Components can be used alone, but their real power comes from being used together.
+This package provides you with two **template factories** that take simple templates that you create and turn them into robust form components.
 
-[View the live example](http://forms-example.meteor.com/) featuring Bootstrap 3 and the `sacha:spin` package, with full code.
+Components include:
+
+* Element
+* Form Block
+
+These can be used standalone, but their real power comes from being used together.
+
+[View the live example](http://forms-example.meteor.com/), which uses Bootstrap 3 and the `sacha:spin` package, with full code.
 
 Install
 -------
@@ -76,7 +83,9 @@ Data from elements passed into the action function is **guaranteed to be valid**
 
 Hopefully, this satisfies your needs.
 
-**2. Add the ReactiveForms form block and elements to the parent template**.
+**2. Add ReactiveForms components to the parent template**.
+
+The `basicForm` and `basicInput` templates are included with this package.
 
 ```handlebars
 <!-- Wrapped input with form-wide schema -->
@@ -87,9 +96,11 @@ Hopefully, this satisfies your needs.
 </template>
 ```
 
-**3. Register the form block and elements with ReactiveForms**.
+See `templates:forms.html` to view the code.
 
-This is where you can specify how the form gets submitted, and how the element gets validated.
+**3. Register the ReactiveForms components**.
+
+This is where you configure the components.
 
 ```javascript
 ReactiveForms.createForm({
@@ -99,18 +110,13 @@ ReactiveForms.createForm({
 
 ReactiveForms.createElement({
   template: 'basicInput',
-  validationEvent: 'keyup',
-  validationValue: function (el, clean, template) {
-    return clean(el.value);
-  }
+  validationEvent: 'keyup'
 });
 ```
 
-The `basicForm` and `basicInput` templates are **included** with this package, however you still need to **register** them.
+You only need to register a given component **once**.
 
-See `templates:forms.html` to see the code.
-
-You only need to register a given form block or element template once--each time it's rendered, it will have a unique context. For elements, they'll always be connected to the instance of the form block that contains them.
+Each time a component is rendered, it will have a unique context. Elements inside a form block will always be connected to the **instance** of the form block that contains them.
 
 ### API
 
@@ -145,27 +151,23 @@ ReactiveForms.createElement({
 
 **Element template requirements**
 
-* Template must contain *one form element*, for example `<input>`.
-* The form element must have the class `.reactive-element`.
+* Template must contain one *form element*, for example `<input>`.
+* The form element must:
+  * Have the `reactive-element` class.
+  * Support the `validationEvent` type you specify in `createElement` options.
 
 Here's an example of a ReactiveForms element template.
 
 ```handlebars
 <template name="basicInput">
   <div class="reactive-input-container">
-
     <strong>{{label}}</strong>
     <br>
-
-    <!-- The form elements in these components need to have the reactive-element class -->
-    <input placeholder={{instructions}} class="reactive-element">
+    <input placeholder={{instructions}} class="reactive-element" value={{value}}>
     <br>
-
-    <!-- If the element is being used standalone, submitted is always true -->
     {{#if submitted}}
       <p class="error-message">{{errorMessage}}</p>
     {{/if}}
-
   </div>
 </template>
 ```
@@ -190,49 +192,63 @@ Here's what changes when this happens:
 * Elements *use the form-level schema*.
 * An element that fails validation will *prevent the form from submitting*.
 * Elements *get access to form-level state*, enabling helpers like `{{loading}}`.
+* Element values that pass validation are stored in *form-level data context*.
 
 **Element template helpers**
 
-Element templates have access to the following helpers:
+Element templates have access to the following *local* helpers:
 
 * `{{value}}`
   * The last value of this element that was able to pass validation.
   * Useful with some form components, such as a toggle button.
   * If you specified a `data` object on the form or element, this will initially hold the value associated with the relevant field in that object.
+* `{{valid}}`
+  * Use this to show validation state on the element, for example a check mark.
+  * Initial data passed into the element is validated on `rendered`.
+  * Defaults to *true* if no schema is provided.
+* `{{changed}}`
+  * This is *true* once the element's value has successfully changed.
+  * Use this to show or hide things until the first validated value change is made.
+  * Initial data passed into the element doesn't trigger `changed`.
+* `{{isChild}}`
+  * This is *true* if the element is wrapped in a form block, or *false* if it's not.
+  * Use this to show or hide things regardless of what a parent form block's state is--for example, some different formatting.
+
+These helpers are available when a *SimpleSchema* is being used:
+
 * `{{label}}`
-  * From the `label` field in your *SimpleSchema* for this element's field.
+  * From the [label](https://github.com/aldeed/meteor-simple-schema#label) field in your *SimpleSchema* for this element's `field`.
   * Use this as the title for your element, for example "First Name".
 * `{{instructions}}`
   * A field we extended *SimpleSchema* with for this package.
   * Good for usability, use this as the placeholder message or an example value.
 * `{{errorMessage}}`
-  * A reactive error message for this field, provided by *SimpleSchema*.
-* `{{valid}}`
-  * Use this to show validation state on the element, for example a check mark.
-* `{{changed}}`
-  * This is *true* once the element's value has successfully changed.
-  * Use this to show or hide things until the first validated value change is made.
-  * Initial data passed into the element doesn't trigger `changed`.
+  * A reactive error message for this field, using [messages](https://github.com/aldeed/meteor-simple-schema#customizing-validation-messages) provided by *SimpleSchema*.
+
+While inside a form block, these *form-level* helpers will be available:
+
 * `{{submitted}}`
   * Lets us know if a parent ReactiveForms form block has been submitted yet.
   * Use this to wrap `{{errorMessage}}` to delay showing element invalidations until submit.
-  * Defaults to *true* unless this template exists inside a ReactiveForms form block.
 * `{{loading}}`
   * Lets us know if a form action is currently running.
   * Use this to disable changes to an element while the submit action is running.
-  * Defauts to *false* unless this template exists inside a ReactiveForms form block.
-* `{{failed}}`
-  * This is *true* if a form action failed.
-  * Defaults to *false* unless this template exists inside a ReactiveForms form block.
 * `{{success}}`
   * This is *true* if a form action was successful.
   * Use this to hide things in the element after submission.
-  * Defaults to *true* unless this template exists inside a ReactiveForms form block.
+
+All the *form-level* helpers will be `false` when an element is running standalone.
+However, you can override specific properties on an element when you invoke it:
+
+```handlebars
+<!-- The `basicInput` example will now show its error messages when standalone -->
+{{> basicInput schema=schema field='testField' submitted=true}}
+```
 
 **Highlights**
 
 > When running standalone (without being wrapped in a form block) you'll put the schema on the
-template invocation.
+element's template invocation. You can also override the other form-level helpers on elements this way.
 
 > Be sure to add the reactive-element class to your element so that it's selected when the form action is run.
 
@@ -326,24 +342,28 @@ All you'll need to do then is get the data from the form elements and save it so
 
 Form block templates have access to the following helpers:
 
-* `{{failed}}`
-  * This is *true* if the last attempt to run the form action failed.
-* `{{success}}`
-  * This is *true* if the last attempt to run the form action was a success.
-  * Use this to hide elements or otherwise end the form's session.
 * `{{invalid}}`
   * This is *true* if any ReactiveForms element in the form block is invalid.
 * `{{invalidCount}}`
   * This shows the number of currently invalid ReactiveForms elements in the form block.
   * As elements become valid, the number adjusts reactively.
+* `{{changed}}`
+  * This is *true* if any valid value change has been made in the form block since it was rendered.
+  * Initial data validation doesn't trigger `changed`, and neither do duplicate values.
+  * If `changed` is triggered after a form block has `success` state, it resets the `submitted`
+    and `success` states to `false`.
+* `{{submitted}}`
+  * This is *true* if the form has ever been submitted.
+  * Submission requires all form elements to be valid.
 * `{{loading}}`
   * Lets us know if a form action is currently running.
   * Use this to show a spinner or other loading indicator.
-* `{{changed}}`
-  * This is *true* if any valid value change has been made in the form since it was rendered.
-  * Initial data validation doesn't trigger `changed`, and neither do duplicate values.
-* `{{submitted}}`
-  * This is *true* if the form has ever been submitted.
+* `{{failed}}`
+  * This is *true* if the last attempt to run the form action failed.
+* `{{success}}`
+  * This is *true* if the last attempt to run the form action was a success.
+  * Use this to hide elements or otherwise end the form's session.
+
 
 **Highlights**
 

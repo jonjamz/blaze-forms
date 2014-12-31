@@ -1,3 +1,17 @@
+1.6.0
+=====
+
+* All *form-level* helpers inside elements (`submitted`, `success`, `loading`) now default to `false`
+  when the element is being used standalone.
+* Individual helpers can now be overridden on elements if they're specified on the element
+  template's invocation.
+* Add `isChild` helper to elements.
+* Remove `failed` helper (added in v1.4.0) from element scope.
+  * Submission failure should be handled outside this scope.
+  * As `failed` and `success` are mutually exclusive states, you can handle submission
+    failure using `{{#if submitted}} {{#unless success}}` anyway.
+* `basicInput` example now supports passed-in (default) data with the `value` helper.
+
 1.5.2
 =====
 
