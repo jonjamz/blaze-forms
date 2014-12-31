@@ -12,7 +12,7 @@ Validation is handled using [SimpleSchemas](https://github.com/aldeed/meteor-sim
 
 **Components**
 
-This package provides you with two **template factories** that take simple templates that you create and turn them into robust form components.
+This package contains **template factories** that turn simple templates into robust form components.
 
 There are two types of components:
 
