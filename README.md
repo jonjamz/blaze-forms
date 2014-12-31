@@ -19,7 +19,7 @@ This package contains **template factories** for two types of components:
 * Form Blocks.
   * Containers that track internal changes, handle submission states, and store valid data. 
 
-Components are reusable, individually-scoped, and take advantage of the latest Template API updates. 
+Components are reusable, individually-scoped, and work with the latest Template API updates. 
 
 They can be used standalone, but their real power comes from being used together.
 
