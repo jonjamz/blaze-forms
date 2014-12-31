@@ -3,10 +3,10 @@ About
 
 Build reactive forms:
 
-* *In minutes*.
-* *For production use*.
-* *With reusable custom components*.
-* *That work the way they should*.
+* *in minutes*.
+* *for production use*.
+* *with reusable custom components*.
+* *that work the way they should*.
 
 Validation is handled using [SimpleSchemas](https://github.com/aldeed/meteor-simple-schema)--however, these are not required.
 
@@ -19,6 +19,8 @@ This package contains ***template factories*** for two types of components:
 
 * **Form Blocks**
 > Containers that track internal changes, handle submission states, and store valid data. 
+
+
 
 Create a component by registering a normal Meteor template with a factory.
 
