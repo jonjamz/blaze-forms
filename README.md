@@ -1,7 +1,10 @@
 About
 -----
+#### Summary
 
-Build production-ready, reactive forms in minutes, using simple templates. Validation is handled using [SimpleSchemas](https://github.com/aldeed/meteor-simple-schema)--however, these are not required.
+Build production-ready, reactive forms in minutes. Convert simple templates into robust forms components using the provided API. 
+
+Validation is handled using [SimpleSchemas](https://github.com/aldeed/meteor-simple-schema)--however, these are not required.
 
 #### Overview
 
@@ -146,7 +149,7 @@ ReactiveForms has only two API endpoints.
 Add any custom template that satisfies the basic requirements (outlined below), and you're
 ready to go!
 
-### ReactiveForms*.createElement()*
+### *ReactiveForms.createElement()*
 
 Create a ReactiveForms element from a compatible template.
 
@@ -274,7 +277,7 @@ element's template invocation. You can also override the other form-level helper
 > Be sure to add the reactive-element class to your element so that it's selected when the form action is run.
 
 
-### ReactiveForms*.createForm()*
+### *ReactiveForms.createForm()*
 
 Create a ReactiveForms form block from a compatible template.
 
