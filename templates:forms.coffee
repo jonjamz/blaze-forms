@@ -29,9 +29,8 @@
     # ------
     # Set schema if exists (optional)
 
-    if self.data.schema
-      ctx = self.data.schema.newContext()
-      self.schemaContext = ctx
+    if self.data.schema && self.data.schema.newContext
+      self.schemaContext = _.extend(self.data.schema.newContext(), {data: self.data.data}) # (Issue #4)
 
     # States
     # ------
@@ -76,6 +75,10 @@
     # The reactive computation below kills `invalid` when all keys become valid.
     setChanged = ->
       self.changed.set(true)
+
+      # Add non-referenced data onto the schema context for validation (Issue #4).
+      if self.schemaContext?
+        self.schemaContext.data = _.extend({}, validatedValues)
 
       # If `success` state is active, disable it and `submitted` to refresh the session.
       # Don't let `changed` affect `submitted` except for when `success` is true.
@@ -286,7 +289,7 @@
           val = getValidationValue(el, cleanValue, self)
 
           # We need an object to validate with--
-          object = {}
+          object = _.extend({}, self.schemaContext.data) # (Issue #4)
           object[self.field] = val
 
           # Get true/false for validation (validating against this field only)
@@ -454,4 +457,3 @@
     createForm: createForm
     createElement: createElement
   }
-

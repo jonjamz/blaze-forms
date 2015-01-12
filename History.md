@@ -1,3 +1,9 @@
+1.6.1
+=====
+
+* Elements inside a form block now validate against the form-level data context.
+  * Fixes a bug with custom validation in SimpleSchema.
+
 1.6.0
 =====
 
