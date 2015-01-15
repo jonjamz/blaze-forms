@@ -1,3 +1,12 @@
+1.6.2-1.6.3
+===========
+
+* Address issues #5, #6, and #7. Thanks @steph643.
+  * Update docs:
+    * Describe the `field` property on elements and how it connects them to form blocks.
+    * Correct description of `invalid` helper (form blocks).
+  * Fix `package.js` to support `instructions` field on client and server-side SimpleSchemas.
+
 1.6.1
 =====
 
