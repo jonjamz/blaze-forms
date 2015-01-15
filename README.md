@@ -110,7 +110,9 @@ Hopefully, this satisfies your needs.
 
 #### 2. Add ReactiveForms components.
 
-The `basicForm` and `basicInput` templates are included with this package.
+The `basicForm` and `basicInput` templates are included with this package. 
+
+Connect elements to the schema in a surrounding form block using the `field` property.
 
 ```handlebars
 <!-- Wrapped input with form-wide schema -->
@@ -215,7 +217,7 @@ integrate with the parent form component.
 
 Here's what changes when this happens:
 
-* Elements *use the form-level schema*.
+* Elements *use the form-level schema*--the `field` property on the element specifies which field in the form's schema to use.
 * An element that fails validation will *prevent the form from submitting*.
 * Elements *get access to form-level state*, enabling helpers like `{{loading}}`.
 * Element values that pass validation are stored in *form-level data context*.
@@ -369,7 +371,9 @@ All you'll need to do then is get the data from the form elements and save it so
 Form block templates have access to the following helpers:
 
 * `{{invalid}}`
-  * This is *true* if any ReactiveForms element in the form block is invalid.
+  * After a submission, this is *true* if any ReactiveForms element in the form block is invalid.
+  * As soon as all elements become valid, it changes back to *false*.
+  * Use this to show a form-level error message after submission.
 * `{{invalidCount}}`
   * This shows the number of currently invalid ReactiveForms elements in the form block.
   * As elements become valid, the number adjusts reactively.
