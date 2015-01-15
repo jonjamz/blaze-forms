@@ -17,10 +17,15 @@ Package.onUse(function(api) {
     'coffeescript'
   ], 'client');
 
+  api.use([
+    'check',
+    'coffeescript'
+  ], 'server');
+
   api.use('aldeed:simple-schema@1.2.0');
   api.imply('aldeed:simple-schema');
 
-  api.addFiles('simple-schema.coffee', ['client', 'server']);
+  api.addFiles('simple-schema.coffee');
   api.addFiles('templates:forms.coffee', 'client');
   api.addFiles('templates:forms.html', 'client');
 });
