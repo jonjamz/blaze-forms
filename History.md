@@ -1,7 +1,7 @@
 1.7
 ===
 
-* Address issues #9 and #11
+* Address issues #9 and #11.
   * Initial data now supports objects with prototype methods.
   * We now keep an array of fields that have changed when initial data is provided to a form.
   * The array of changed fields is passed into the action function as a third argument.
