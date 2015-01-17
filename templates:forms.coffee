@@ -99,7 +99,7 @@
     validatedValues = {} # (non-reactive)
     
     # Track which fields have changed when initial data is present (Issue #11)
-    changedFields = []
+    changedValues = {}
 
     self.setValidatedValue = (field, value) ->
 
@@ -118,8 +118,8 @@
           unless self.data.data[field] && _.isEqual(self.data.data[field], value)
             setChanged()
             
-            # Push field to `changedFields` array.
-            changedFields.push(field)
+            # Update field in `changedValues`.
+            changedValues[field] = value
 
         # If no initial data was provided, trigger `changed` because it's a new value.
         else
@@ -149,7 +149,7 @@
         success: setSuccess
         failed: setFailed
 
-      self.data.action.call(validatedValues, formElements, callbacks, changedFields)
+      self.data.action.call(validatedValues, formElements, callbacks, changedValues)
 
     return
 
