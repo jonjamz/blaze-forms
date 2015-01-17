@@ -72,27 +72,31 @@ Template['testForm'].helpers({
     });
   },
   action: function () {
-    return function (els, callbacks) {
+    return function (els, callbacks, fields) {
       console.log("[forms] Action running!");
       console.log("[forms] Form data!", this);
       console.log("[forms] Form elements!", els);
       console.log("[forms] Callbacks!", callbacks);
+      console.log("[forms] Changed fields!", fields);
       callbacks.success();
     };
   }
 });
 ```
 
-The **action function** runs when the form is submitted. It takes two params, as shown above:
+The **action function** runs when the form is submitted. It takes three params, as shown above:
 * `els`
   * This contains any elements in the form block with class `.reactive-element`.
-  * You'll likely serialize this and save it to the database.
+  * You may use this to retrieve data and save it to the database.
   * You can also use this to clear each element's value after the form has successfully been submitted.
 * `callbacks`
   * This contains two methods to trigger the form's state.
   * Running `callbacks.success()` sets `success`.
   * Running `callbacks.failed()`  sets `failed`.
   * The form's `{{loading}}` state (see below) will run from the time you submit to the time you call one of these.
+* `fields`
+  * If you passed in initial data, this contains an array of fields that have changed.
+  * This is useful for figuring out what fields to use in an update query.
 
 Also, all validated form values are available with no extra work from `this`:
 
