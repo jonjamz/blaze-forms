@@ -72,12 +72,12 @@ Template['testForm'].helpers({
     });
   },
   action: function () {
-    return function (els, callbacks, fields) {
+    return function (els, callbacks, changed) {
       console.log("[forms] Action running!");
       console.log("[forms] Form data!", this);
       console.log("[forms] Form elements!", els);
       console.log("[forms] Callbacks!", callbacks);
-      console.log("[forms] Changed fields!", fields);
+      console.log("[forms] Changed fields!", changed);
       callbacks.success();
     };
   }
@@ -94,8 +94,9 @@ The **action function** runs when the form is submitted. It takes three params, 
   * Running `callbacks.success()` sets `success`.
   * Running `callbacks.failed()`  sets `failed`.
   * The form's `{{loading}}` state (see below) will run from the time you submit to the time you call one of these.
-* `fields`
-  * If you passed in initial data, this contains an array of fields that have changed.
+* `changed`
+  * If you passed in initial data, this contains an object with only the fields that have changed.
+  * If a field was changed to a different value and back, it will still be in this object.
   * This is useful for figuring out what fields to use in an update query.
 
 Also, all validated form values are available with no extra work from `this`:
