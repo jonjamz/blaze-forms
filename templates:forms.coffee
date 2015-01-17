@@ -97,15 +97,20 @@
     # Store validated element values as local data (can't submit invalid data anyway)
 
     validatedValues = {} # (non-reactive)
-    
+
     # Track which fields have changed when initial data is present (Issue #11)
     changedValues = {}
 
     self.setValidatedValue = (field, value) ->
 
       # First, opt into setting `changed` if this is a unique update.
-      if validatedValues[field] && !_.isEqual(value, validatedValues[field])
+      if _.has(validatedValues, field) && !_.isEqual(value, validatedValues[field])
         validatedValues[field] = value
+
+        # If the value was present in initial data, set it as `changed`.
+        if self.data.data && _.has(self.data.data, field)
+          changedValues[field] = value
+
         setChanged()
 
       # If the field doesn't exist in validatedValues yet, add it.
@@ -115,11 +120,8 @@
         # If initial data was provided--
         # Initial validation passing back that value shouldn't trigger `changed`.
         if self.data.data
-          unless self.data.data[field] && _.isEqual(self.data.data[field], value)
+          unless _.has(self.data.data, field) && _.isEqual(self.data.data[field], value)
             setChanged()
-            
-            # Update field in `changedValues`.
-            changedValues[field] = value
 
         # If no initial data was provided, trigger `changed` because it's a new value.
         else
@@ -224,6 +226,7 @@
 
       self = this
       parentData = Template.parentData(1)
+      initValue = null
 
       self.valid = new Blaze.ReactiveVar(true)
       self.changed = new Blaze.ReactiveVar(false)
@@ -241,13 +244,17 @@
         self.success = parentData.success || null
         self.schema = parentData.schema || null
         self.schemaContext = parentData.schemaContext || null
-        initValue = parentData.data && parentData.data[self.field] || null
+
+        if parentData.data && _.has(parentData.data, self.field)
+          initValue = parentData.data[self.field]
 
       # But if not, run standalone
       else
         self.schema = self.data.schema || null
         self.schemaContext = self.data.schema && self.data.schema.newContext() || null
-        initValue = self.data.data && self.data.data[self.field] || null
+
+        if self.data.data && _.has(self.data.data, self.field)
+          initValue = self.data.data[self.field]
 
       # Value
       # -----
