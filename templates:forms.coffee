@@ -97,6 +97,9 @@
     # Store validated element values as local data (can't submit invalid data anyway)
 
     validatedValues = {} # (non-reactive)
+    
+    # Track which fields have changed when initial data is present (Issue #11)
+    changedFields = []
 
     self.setValidatedValue = (field, value) ->
 
@@ -114,6 +117,9 @@
         if self.data.data
           unless self.data.data[field] && _.isEqual(self.data.data[field], value)
             setChanged()
+            
+            # Push field to `changedFields` array.
+            changedFields.push(field)
 
         # If no initial data was provided, trigger `changed` because it's a new value.
         else
@@ -143,7 +149,7 @@
         success: setSuccess
         failed: setFailed
 
-      self.data.action.call(validatedValues, formElements, callbacks)
+      self.data.action.call(validatedValues, formElements, callbacks, changedFields)
 
     return
 
