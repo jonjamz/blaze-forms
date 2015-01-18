@@ -1,7 +1,7 @@
 1.7.1
 =====
 
-* Address issues #12 and #13
+* Address issues #12 and #13.
   * The `changed` argument in the action function now contains *any* fields that have changed, not just fields that were originally present in the initial data.
   * Support the optional `options` object to Simple Schema's `clean` function in `validationValue`.
 
