@@ -285,10 +285,10 @@
         return clean(value)
 
       # Wrap the SimpleSchema `clean` function to add the key automatically
-      cleanValue = (val) ->
+      cleanValue = (val, options) ->
         obj = {}
         obj[self.field] = val
-        cln = self.schema.clean(obj)
+        cln = self.schema.clean(obj, options)
         return cln[self.field]
 
       # Callback for `validationEvent` trigger
