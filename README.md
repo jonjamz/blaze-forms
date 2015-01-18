@@ -177,7 +177,7 @@ ReactiveForms.createElement({
     // it now takes and returns just a value, not an object.
     console.log('Specifying my own validation value!');
     value = $(el).val();
-    return clean(value);
+    return clean(value, {removeEmptyStrings: false});
   }
 });
 ```
