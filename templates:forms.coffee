@@ -107,8 +107,8 @@
       if _.has(validatedValues, field) && !_.isEqual(value, validatedValues[field])
         validatedValues[field] = value
 
-        # If the value was present in initial data, set it as `changed`.
-        if self.data.data && _.has(self.data.data, field)
+        # If initial data was present, set updated value as `changed`.
+        if self.data.data
           changedValues[field] = value
 
         setChanged()
