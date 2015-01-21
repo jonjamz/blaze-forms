@@ -429,11 +429,11 @@
       template.helpers(elements.helpers)
       template.events evt
 
-  # Create a new form
-  # -----------------
+  # Create a new form block
+  # -----------------------
   # Accepts any compatible ReactiveForm form template, and a choice of submit types
 
-  createForm = (obj) ->
+  createFormBlock = (obj) ->
     check obj, Match.ObjectIncluding
       template: String
       submitType: String
@@ -462,12 +462,19 @@
       template.helpers(forms.helpers)
       template.events evt
 
+  createForm = (obj) ->
+    if console?.warn?
+      console.warn('[forms] `createForm` is deprecated. Use `createFormBlock` instead.')
+
+    return createFormBlock(obj)
+
 
 
   # Return Interface
   # ========================================================================================
 
   return {
+    createFormBlock: createFormBlock
     createForm: createForm
     createElement: createElement
   }
