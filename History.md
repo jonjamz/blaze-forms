@@ -1,3 +1,8 @@
+1.8.1
+=====
+
+* Automatically register `defaultFormBlock`.
+
 1.8.0
 =====
 
