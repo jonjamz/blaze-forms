@@ -75,7 +75,7 @@ Template['testForm'].helpers({
     return function (els, callbacks, changed) {
       console.log("[forms] Action running!");
       console.log("[forms] Form data!", this);
-      console.log("[forms] HTML elements!", els);
+      console.log("[forms] HTML elements with `.reactive-element` class!", els);
       console.log("[forms] Callbacks!", callbacks);
       console.log("[forms] Changed fields!", changed);
       callbacks.success();
