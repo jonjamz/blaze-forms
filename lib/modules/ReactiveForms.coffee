@@ -1,6 +1,18 @@
 
 @ReactiveForms = ReactiveForms = do ->
 
+  # Utils
+  # ========================================================================================
+  # Generic helper functions for use throughout the package.
+
+  # Log deprecation warning and offer alternative
+  deprecatedLogger = (item, alternative) ->
+    if console?.warn?
+      console.warn("[forms] `#{item}` is deprecated. Use `#{alternative}` instead.
+        See documentation for more information.")
+
+
+
   # Forms
   # ========================================================================================
   # Simple template block helpers that provide advanced functionality.
@@ -96,20 +108,19 @@
     # ------
     # Store validated element values as local data (can't submit invalid data anyway)
 
-    validatedValues = {} # (non-reactive)
+    validatedValues = {} # (non-reactive form data context)
 
     # Track which fields have changed when initial data is present (Issue #11)
-    changedValues = {}
+    changedValues = self.data.data && {} || undefined
 
     self.setValidatedValue = (field, value) ->
 
       # First, opt into setting `changed` if this is a unique update.
       if _.has(validatedValues, field) && !_.isEqual(value, validatedValues[field])
-        validatedValues[field] = value
 
-        # If initial data was present, set updated value as `changed`.
-        if self.data.data
-          changedValues[field] = value
+        # Set value to form data context, optionally set `changedValues`.
+        validatedValues[field] = value
+        changedValues && changedValues[field] = value
 
         setChanged()
 
@@ -162,25 +173,50 @@
 
   forms.helpers =
 
-    # These are passed into the form to be in the elements' parent scope
+    # This is all of the below consolidated into one object (Issue #15)
+    # -----------------------------------------------------
+
+    context: ->
+      inst = Template.instance()
+
+      return {
+        schema: inst.data.schema
+        schemaContext: inst.schemaContext
+        submit: inst.submit
+        submitted: inst.submitted
+        loading: inst.loading
+        success: inst.success
+        failed: inst.failed
+        invalid: inst.invalid
+        changed: inst.changed
+        setValidatedValue: inst.setValidatedValue
+      }
+
+    # These are passed into the form to be in the elements' parent scope (deprecated)
     # ------------------------------------------------------------------
 
     __schemaContext__: ->
+      deprecatedLogger('__schemaContext__', 'context')
       return Template.instance().schemaContext
 
     __setValidatedValue__: ->
+      deprecatedLogger('__setValidatedValue__', 'context')
       return Template.instance().setValidatedValue
 
     __submit__: ->
+      deprecatedLogger('__submit__', 'context')
       return Template.instance().submit
 
     __submitted__: ->
+      deprecatedLogger('__submitted__', 'context')
       return Template.instance().submitted
 
     __loading__: ->
+      deprecatedLogger('__loading__', 'context')
       return Template.instance().loading
 
     __success__: ->
+      deprecatedLogger('__success__', 'context')
       return Template.instance().success
 
     # These are used as real helpers
@@ -225,26 +261,36 @@
     return ->
 
       self = this
-      parentData = Template.parentData(1)
       initValue = null
+      parentData = Template.parentData(1)
 
-      self.valid = new Blaze.ReactiveVar(true)
-      self.changed = new Blaze.ReactiveVar(false)
+      # Basic setup
+      # -----------
+
       self.field = self.data.field || null
+
+      # Support a single context object (Issue #15)
+      if parentData && _.has(parentData, 'context')
+        context = parentData.context
+
+        # Move anything outside of `context` into `context
+        if Match.test(context, Object)
+          for key, val of parentData when key isnt 'context'
+            context[key] = val
+
+        # Give us our new parent data
+        parentData = context
+
+      # Keep this here for now because checking against `context` would be unreliable
       self.isChild = parentData && parentData.submit?
 
-      # Setup
-      # -----
-
-      # Integrate with parent data and methods if possible
       if self.isChild
-        self.submit = parentData.submit || null
-        self.submitted = parentData.submitted || null
-        self.loading = parentData.loading || null
-        self.success = parentData.success || null
-        self.schema = parentData.schema || null
-        self.schemaContext = parentData.schemaContext || null
 
+        # Localize parent states and schema (specific items appropriate for use in elements)
+        for key in ['submit', 'submitted', 'loading', 'success', 'schema', 'schemaContext']
+          self[key] = parentData[key] || null
+
+        # Set local initial value if provided by the parent
         if parentData.data && _.has(parentData.data, self.field)
           initValue = parentData.data[self.field]
 
@@ -255,6 +301,12 @@
 
         if self.data.data && _.has(self.data.data, self.field)
           initValue = self.data.data[self.field]
+
+      # States
+      # ------
+
+      self.valid = new Blaze.ReactiveVar(true)
+      self.changed = new Blaze.ReactiveVar(false)
 
       # Value
       # -----
@@ -463,9 +515,7 @@
       template.events evt
 
   createForm = (obj) ->
-    if console?.warn?
-      console.warn('[forms] `createForm` is deprecated. Use `createFormBlock` instead.')
-
+    deprecatedLogger('createForm', 'createFormBlock')
     return createFormBlock(obj)
 
 
@@ -475,6 +525,6 @@
 
   return {
     createFormBlock: createFormBlock
-    createForm: createForm
+    createForm: createForm # Deprecated. Use `createFormBlock` instead.
     createElement: createElement
   }

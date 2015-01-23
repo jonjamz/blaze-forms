@@ -1,7 +1,7 @@
 Package.describe({
   name: 'templates:forms',
   summary: 'Dead easy reactive forms with validation.',
-  version: '1.7.1',
+  version: '1.8.0',
   git: 'https://github.com/meteortemplates/forms.git'
 });
 
@@ -25,13 +25,20 @@ Package.onUse(function(api) {
   api.use('aldeed:simple-schema@1.2.0');
   api.imply('aldeed:simple-schema');
 
-  api.addFiles('simple-schema.coffee');
-  api.addFiles('templates:forms.coffee', 'client');
-  api.addFiles('templates:forms.html', 'client');
+  // Templates
+  api.addFiles('templates/defaultFormBlock.html', 'client');
+  api.addFiles('templates/basicFormBlock.html', 'client');
+  api.addFiles('templates/basicForm.html', 'client');
+  api.addFiles('templates/basicInput.html', 'client');
+
+  // Lib
+  api.addFiles('lib/extensions/simple-schema.coffee');
+  api.addFiles('lib/helpers.coffee', 'client');
+  api.addFiles('lib/modules/ReactiveForms.coffee', 'client');
 });
 
 Package.onTest(function(api) {
   api.use('tinytest');
   api.use('templates:forms');
-  api.addFiles('templates:forms-tests.js');
+  api.addFiles('tests/basic.js');
 });

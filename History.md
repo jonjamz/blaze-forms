@@ -1,3 +1,24 @@
+1.8.0
+=====
+
+* Transitional release before `v2.0.0`.
+* Address issues #13, #15, #16, #17 and #18.
+  * The `changed` argument in the action function is now `undefined` if no initial data was provided.
+  * Consolidate helpers passed into `UI.contentBlock` into one `context` argument.
+    Log deprecation warning when helpers are passed in individually.
+  * The container div in the `basicInput` example has been removed.
+  * The endpoint to create a form block is now called `createFormBlock`.
+    Use of `createForm` will log a deprecation warning.
+  * Minor update to `basicInput` and `basicForm` code.
+  * Change `basicForm` template name to `basicFormBlock` (but keep `basicForm` for compatibility).
+  * Add `defaultFormBlock` block helper that supports using form block helpers directly.
+  * Add global `context` helper to allow direct access to form-level helpers in a form block's `UI.contentBlock`.
+    This keeps reactivity normal (#17) and enables `defaultFormBlock`-style usage (#15).
+* Docs update:
+  * Capitalize component names throughout; more clearly distinguish between these components and HTML elements of the same name.
+  * Sync up examples.
+  * Move thanks to @steph643 for issue contributions out of here and into the docs.
+
 1.7.1
 =====
 
@@ -5,8 +26,8 @@
   * The `changed` argument in the action function now contains *any* fields that have changed, not just fields that were originally present in the initial data.
   * Support the optional `options` object to Simple Schema's `clean` function in `validationValue`.
 
-1.7
-===
+1.7.0
+=====
 
 * Address issues #9 and #11.
   * Initial data now supports objects with prototype methods.
@@ -16,7 +37,7 @@
 1.6.2-1.6.3
 ===========
 
-* Address issues #5, #6, and #7. Thanks @steph643.
+* Address issues #5, #6, and #7.
   * Update docs:
     * Describe the `field` property on elements and how it connects them to form blocks.
     * Correct description of `invalid` helper (form blocks).
@@ -101,7 +122,6 @@
   * Store last validated value for all elements in the form block.
   * Context is unique to every form block template instance.
 * Bind action function to the form-level data context when it's called.
-
 
 1.0.0
 =====
