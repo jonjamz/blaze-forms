@@ -13,7 +13,7 @@
 
   # Utils
   # ========================================================================================
-  # Generic helper functions for use throughout the package.
+  # Generic helper functions for use throughout the module.
 
 
   # Log deprecation warning and offer alternative
