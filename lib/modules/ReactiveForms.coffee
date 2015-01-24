@@ -1,9 +1,20 @@
 
 @ReactiveForms = ReactiveForms = do ->
 
+
+
+
+
+  MODULE_NAMESPACE = 'reactiveForms'
+
+
+
+
+
   # Utils
   # ========================================================================================
   # Generic helper functions for use throughout the package.
+
 
   # Log deprecation warning and offer alternative
   deprecatedLogger = (item, alternative) ->
@@ -13,11 +24,14 @@
 
 
 
+
+
   # Forms
   # ========================================================================================
   # Simple template block helpers that provide advanced functionality.
 
   forms = {}
+
 
   # Created callback (constructor)
   # ------------------------------
@@ -26,145 +40,157 @@
 
   # NOTE: SimpleSchema validation is optional, but an action function is required.
 
-  forms.created = ->
-    self = this
+  forms.createdFactory = (options) ->
 
-    # Validation
-    # ----------
-    # Validate passed-in data
+    return ->
 
-    check self.data.schema, Match.Optional(SimpleSchema)
-    check self.data.action, Function # (formObject) -> do something
-    check self.data.data, Match.Optional Match.Where (x) ->
-      return _.isObject(x) && !_.isArray(x) && !_.isFunction(x) # (Issue #9)
+      self = this
+      component = {}
 
-    # Schema
-    # ------
-    # Set schema if exists (optional)
+      # Validation
+      # ----------
+      # Validate passed-in data
 
-    if self.data.schema && self.data.schema.newContext
-      self.schemaContext = _.extend(self.data.schema.newContext(), {data: self.data.data}) # (Issue #4)
+      check self.data.schema, Match.Optional(SimpleSchema)
+      check self.data.action, Function # (formObject) -> do something
+      check self.data.data, Match.Optional Match.Where (x) ->
+        return _.isObject(x) && !_.isArray(x) && !_.isFunction(x) # (Issue #9)
 
-    # States
-    # ------
-    # Set by the submit method below
+      # Schema
+      # ------
+      # Set schema if exists (optional)
 
-    self.changed   = new Blaze.ReactiveVar(false)
-    self.submitted = new Blaze.ReactiveVar(false)
-    self.failed    = new Blaze.ReactiveVar(false)
-    self.success   = new Blaze.ReactiveVar(false)
-    self.invalid   = new Blaze.ReactiveVar(false)
-    self.loading   = new Blaze.ReactiveVar(false)
+      if self.data.schema && self.data.schema.newContext
+        component.schemaContext = _.extend(self.data.schema.newContext(), {data: self.data.data}) # (Issue #4)
 
-    # Ensure states are mutually exclusive--set with these methods only
-    setSuccess = ->
-      self.loading.set(false)
-      self.invalid.set(false)
-      self.success.set(true)
-      self.failed.set(false)
+      # States
+      # ------
+      # Set by the submit method below
 
-    setFailed = ->
-      self.loading.set(false)
-      self.invalid.set(false)
-      self.failed.set(true)
-      self.success.set(false)
+      component.changed   = new Blaze.ReactiveVar(false)
+      component.submitted = new Blaze.ReactiveVar(false)
+      component.failed    = new Blaze.ReactiveVar(false)
+      component.success   = new Blaze.ReactiveVar(false)
+      component.invalid   = new Blaze.ReactiveVar(false)
+      component.loading   = new Blaze.ReactiveVar(false)
 
-    setLoading = ->
-      self.loading.set(true)
-      self.invalid.set(false)
-      self.failed.set(false)
-      self.success.set(false)
+      # Ensure states are mutually exclusive--set with these methods only
+      setSuccess = ->
+        component.loading.set(false)
+        component.invalid.set(false)
+        component.success.set(true)
+        component.failed.set(false)
 
-    setInvalid = ->
-      self.loading.set(false)
-      self.invalid.set(true)
-      self.failed.set(false)
-      self.success.set(false)
+      setFailed = ->
+        component.loading.set(false)
+        component.invalid.set(false)
+        component.failed.set(true)
+        component.success.set(false)
 
-    # As `success` represents the end of a form session, a subsequent `change` should
-    # initiate a new session, if the UI is still editable.
+      setLoading = ->
+        component.loading.set(true)
+        component.invalid.set(false)
+        component.failed.set(false)
+        component.success.set(false)
 
-    # Although, a successful `change` of one value doesn't negate `invalid` or `failed`.
-    # The reactive computation below kills `invalid` when all keys become valid.
-    setChanged = ->
-      self.changed.set(true)
+      setInvalid = ->
+        component.loading.set(false)
+        component.invalid.set(true)
+        component.failed.set(false)
+        component.success.set(false)
 
-      # Add non-referenced data onto the schema context for validation (Issue #4).
-      if self.schemaContext?
-        self.schemaContext.data = _.extend({}, validatedValues)
+      # As `success` represents the end of a form session, a subsequent `change` should
+      # initiate a new session, if the UI is still editable.
 
-      # If `success` state is active, disable it and `submitted` to refresh the session.
-      # Don't let `changed` affect `submitted` except for when `success` is true.
-      if self.success.get() is true
-        self.success.set(false)
-        self.submitted.set(false)
+      # Although, a successful `change` of one value doesn't negate `invalid` or `failed`.
+      # The reactive computation below kills `invalid` when all keys become valid.
+      setChanged = ->
+        component.changed.set(true)
 
-    # When a user fixes the invalid fields, clear invalid state
-    self.autorun ->
-      if !self.schemaContext.invalidKeys().length
-        self.invalid.set(false)
+        # Add non-referenced data onto the schema context for validation (Issue #4).
+        if component.schemaContext?
+          component.schemaContext.data = _.extend({}, validatedValues)
 
-    # Values
-    # ------
-    # Store validated element values as local data (can't submit invalid data anyway)
+        # If `success` state is active, disable it and `submitted` to refresh the session.
+        # Don't let `changed` affect `submitted` except for when `success` is true.
+        if component.success.get() is true
+          component.success.set(false)
+          component.submitted.set(false)
 
-    validatedValues = {} # (non-reactive form data context)
+      # When a user fixes the invalid fields, clear invalid state
+      self.autorun ->
+        if !component.schemaContext.invalidKeys().length
+          component.invalid.set(false)
 
-    # Track which fields have changed when initial data is present (Issue #11)
-    changedValues = self.data.data && {} || undefined
+      # Values
+      # ------
+      # Store validated element values as local data (can't submit invalid data anyway)
 
-    self.setValidatedValue = (field, value) ->
+      validatedValues = {} # (non-reactive form data context)
 
-      # First, opt into setting `changed` if this is a unique update.
-      if _.has(validatedValues, field) && !_.isEqual(value, validatedValues[field])
+      # Track which fields have changed when initial data is present (Issue #11)
+      changedValues = self.data.data && {} || undefined
 
-        # Set value to form data context, optionally set `changedValues`.
-        validatedValues[field] = value
-        changedValues && changedValues[field] = value
+      component.setValidatedValue = (field, value) ->
 
-        setChanged()
+        # First, opt into setting `changed` if this is a unique update.
+        if _.has(validatedValues, field) && !_.isEqual(value, validatedValues[field])
 
-      # If the field doesn't exist in validatedValues yet, add it.
-      else
-        validatedValues[field] = value
+          # Set value to form data context, optionally set `changedValues`.
+          validatedValues[field] = value
+          changedValues && changedValues[field] = value
 
-        # If initial data was provided--
-        # Initial validation passing back that value shouldn't trigger `changed`.
-        if self.data.data
-          unless _.has(self.data.data, field) && _.isEqual(self.data.data[field], value)
-            setChanged()
-
-        # If no initial data was provided, trigger `changed` because it's a new value.
-        else
           setChanged()
 
-    # Submit
-    # ------
+        # If the field doesn't exist in validatedValues yet, add it.
+        else
+          validatedValues[field] = value
 
-    # Validate data and run provided action function
-    self.submit = ->
-      self.submitted.set(true)
+          # If initial data was provided--
+          # Initial validation passing back that value shouldn't trigger `changed`.
+          if self.data.data
+            unless _.has(self.data.data, field) && _.isEqual(self.data.data[field], value)
+              setChanged()
 
-      # Check the schema if we're using SimpleSchema
-      # If any values are bad, return without running the action function.
-      if self.schemaContext?
-        if !!self.schemaContext.invalidKeys().length
-          setInvalid()
-          return
+          # If no initial data was provided, trigger `changed` because it's a new value.
+          else
+            setChanged()
 
-      # Invoke loading state until action function returns failed or success.
-      setLoading()
+      # Submit
+      # ------
 
-      # Send form elements and callbacks to action function.
-      # The action function is bound to validatedValues.
-      formElements = self.findAll('.reactive-element')
-      callbacks =
-        success: setSuccess
-        failed: setFailed
+      # Validate data and run provided action function
+      component.submit = ->
+        component.submitted.set(true)
 
-      self.data.action.call(validatedValues, formElements, callbacks, changedValues)
+        # Check the schema if we're using SimpleSchema
+        # If any values are bad, return without running the action function.
+        if component.schemaContext?
+          if !!component.schemaContext.invalidKeys().length
+            setInvalid()
+            return
 
-    return
+        # Invoke loading state until action function returns failed or success.
+        setLoading()
+
+        # Send form elements and callbacks to action function.
+        # The action function is bound to validatedValues.
+        formElements = self.findAll('.reactive-element')
+        callbacks =
+          success: setSuccess
+          failed: setFailed
+
+        self.data.action.call(validatedValues, formElements, callbacks, changedValues)
+
+      # Add component to custom namespace (Issue #21)
+      ext = {}
+      ext[MODULE_NAMESPACE] = component
+
+      _.extend(self, ext)
+
+      # Custom callback (Issue #20)
+      options.created && options.created.call(self)
+
 
   # Template helpers
   # ----------------
@@ -178,18 +204,19 @@
 
     context: ->
       inst = Template.instance()
+      component = inst[MODULE_NAMESPACE]
 
       return {
         schema: inst.data.schema
-        schemaContext: inst.schemaContext
-        submit: inst.submit
-        submitted: inst.submitted
-        loading: inst.loading
-        success: inst.success
-        failed: inst.failed
-        invalid: inst.invalid
-        changed: inst.changed
-        setValidatedValue: inst.setValidatedValue
+        schemaContext: component.schemaContext
+        submit: component.submit
+        submitted: component.submitted
+        loading: component.loading
+        success: component.success
+        failed: component.failed
+        invalid: component.invalid
+        changed: component.changed
+        setValidatedValue: component.setValidatedValue
       }
 
     # These are passed into the form to be in the elements' parent scope (deprecated)
@@ -197,51 +224,79 @@
 
     __schemaContext__: ->
       deprecatedLogger('__schemaContext__', 'context')
-      return Template.instance().schemaContext
+      inst = Template.instance()
+      component = inst[MODULE_NAMESPACE]
+      return component.schemaContext
 
     __setValidatedValue__: ->
       deprecatedLogger('__setValidatedValue__', 'context')
-      return Template.instance().setValidatedValue
+      inst = Template.instance()
+      component = inst[MODULE_NAMESPACE]
+      return component.setValidatedValue
 
     __submit__: ->
       deprecatedLogger('__submit__', 'context')
-      return Template.instance().submit
+      inst = Template.instance()
+      component = inst[MODULE_NAMESPACE]
+      return component.submit
 
     __submitted__: ->
       deprecatedLogger('__submitted__', 'context')
-      return Template.instance().submitted
+      inst = Template.instance()
+      component = inst[MODULE_NAMESPACE]
+      return component.submitted
 
     __loading__: ->
       deprecatedLogger('__loading__', 'context')
-      return Template.instance().loading
+      inst = Template.instance()
+      component = inst[MODULE_NAMESPACE]
+      return component.loading
 
     __success__: ->
       deprecatedLogger('__success__', 'context')
-      return Template.instance().success
+      inst = Template.instance()
+      component = inst[MODULE_NAMESPACE]
+      return component.success
 
     # These are used as real helpers
     # ------------------------------
 
     failed: ->
-      return Template.instance().failed.get()
+      inst = Template.instance()
+      component = inst[MODULE_NAMESPACE]
+      return component.failed.get()
 
     success: ->
-      return Template.instance().success.get()
+      inst = Template.instance()
+      component = inst[MODULE_NAMESPACE]
+      return component.success.get()
 
     invalidCount: ->
-      return Template.instance().schemaContext.invalidKeys().length
+      inst = Template.instance()
+      component = inst[MODULE_NAMESPACE]
+      return component.schemaContext.invalidKeys().length
 
     invalid: ->
-      return Template.instance().invalid.get()
+      inst = Template.instance()
+      component = inst[MODULE_NAMESPACE]
+      return component.invalid.get()
 
     loading: ->
-      return Template.instance().loading.get()
+      inst = Template.instance()
+      component = inst[MODULE_NAMESPACE]
+      return component.loading.get()
 
     changed: ->
-      return Template.instance().changed.get()
+      inst = Template.instance()
+      component = inst[MODULE_NAMESPACE]
+      return component.changed.get()
 
     submitted: ->
-      return Template.instance().submitted.get()
+      inst = Template.instance()
+      component = inst[MODULE_NAMESPACE]
+      return component.submitted.get()
+
+
 
 
 
@@ -251,6 +306,7 @@
 
   elements = {}
 
+
   # Created callback (constructor)
   # ------------------------------
   # Sets up its own schema and local schema context if passed (expects SimpleSchema instances)
@@ -258,16 +314,18 @@
   # a passed-in context so that invalidations can be stored on the form.
 
   elements.createdFactory = (options) ->
+
     return ->
 
       self = this
+      component = {}
       initValue = null
       parentData = Template.parentData(1)
 
       # Basic setup
       # -----------
 
-      self.field = self.data.field || null
+      component.field = self.data.field || null
 
       # Support a single context object (Issue #15)
       if parentData && _.has(parentData, 'context')
@@ -282,37 +340,37 @@
         parentData = context
 
       # Keep this here for now because checking against `context` would be unreliable
-      self.isChild = parentData && parentData.submit?
+      component.isChild = parentData && parentData.submit?
 
-      if self.isChild
+      if component.isChild
 
         # Localize parent states and schema (specific items appropriate for use in elements)
         for key in ['submit', 'submitted', 'loading', 'success', 'schema', 'schemaContext']
-          self[key] = parentData[key] || null
+          component[key] = parentData[key] || null
 
         # Set local initial value if provided by the parent
-        if parentData.data && _.has(parentData.data, self.field)
-          initValue = parentData.data[self.field]
+        if parentData.data && _.has(parentData.data, component.field)
+          initValue = parentData.data[component.field]
 
       # But if not, run standalone
       else
-        self.schema = self.data.schema || null
-        self.schemaContext = self.data.schema && self.data.schema.newContext() || null
+        component.schema = self.data.schema || null
+        component.schemaContext = self.data.schema && self.data.schema.newContext() || null
 
-        if self.data.data && _.has(self.data.data, self.field)
-          initValue = self.data.data[self.field]
+        if self.data.data && _.has(self.data.data, component.field)
+          initValue = self.data.data[component.field]
 
       # States
       # ------
 
-      self.valid = new Blaze.ReactiveVar(true)
-      self.changed = new Blaze.ReactiveVar(false)
+      component.valid = new Blaze.ReactiveVar(true)
+      component.changed = new Blaze.ReactiveVar(false)
 
       # Value
       # -----
       # Track this element's latest validated value, starting with init data
 
-      self.value = new Blaze.ReactiveVar(initValue)
+      component.value = new Blaze.ReactiveVar(initValue)
 
       # Save a value--usually after successful validation
       setValue = setValidatedValue = (value) ->
@@ -320,13 +378,13 @@
         # Initial value from passed-in data will get validated on render.
         # That shouldn't count as `changed`.
         # This fixes that, along with adding a general idempotency.
-        unless _.isEqual(self.value.get(), value)
-          self.value.set(value)
-          self.changed.set(true)
+        unless _.isEqual(component.value.get(), value)
+          component.value.set(value)
+          component.changed.set(true)
 
         # Save to a parent form block if possible
-        if self.isChild && parentData.setValidatedValue?
-          parentData.setValidatedValue(self.field, value)
+        if component.isChild && parentData.setValidatedValue?
+          parentData.setValidatedValue(component.field, value)
 
       # Validation
       # ----------
@@ -339,32 +397,32 @@
       # Wrap the SimpleSchema `clean` function to add the key automatically
       cleanValue = (val, options) ->
         obj = {}
-        obj[self.field] = val
-        cln = self.schema.clean(obj, options)
-        return cln[self.field]
+        obj[component.field] = val
+        cln = component.schema.clean(obj, options)
+        return cln[component.field]
 
       # Callback for `validationEvent` trigger
       # --------------------------------------
 
-      self.validateElement = ->
+      component.validateElement = ->
         el = self.find('.reactive-element')
 
-        if self.schema? and self.schemaContext?
+        if component.schema? and component.schemaContext?
 
           # Get value from DOM element and alter value to avoid validation errors
           val = getValidationValue(el, cleanValue, self)
 
           # We need an object to validate with--
-          object = _.extend({}, self.schemaContext.data) # (Issue #4)
-          object[self.field] = val
+          object = _.extend({}, component.schemaContext.data) # (Issue #4)
+          object[component.field] = val
 
           # Get true/false for validation (validating against this field only)
-          isValid = self.schemaContext.validateOne(object, self.field)
+          isValid = component.schemaContext.validateOne(object, component.field)
 
           # Set `valid` property to reflect in templates
-          self.valid.set(isValid)
+          component.valid.set(isValid)
 
-          # Set `value` property, locally and on `self.field` on a parent, if valid
+          # Set `value` property, locally and on `component.field` on a parent, if valid
           if isValid is true
             setValidatedValue(val)
             return
@@ -373,18 +431,41 @@
 
           # Can't pass in `clean` method if user isn't using SimpleSchema
           # Could provide a different utility method in the future for this...
-          val = getValidationValue(el, self)
+          noop = (arg) ->
+            return arg
+
+          val = getValidationValue(el, noop, self)
 
           # Set the value just for templates--can't validate without a schema
           setValue(val)
           return
 
+      # Add component to custom namespace (Issue #21)
+      ext = {}
+      ext[MODULE_NAMESPACE] = component
+
+      _.extend(self, ext)
+
+      # Custom callback (Issue #20)
+      options.created && options.created.call(self)
+
+
   # Rendered callback
   # -----------------
   # Does initial validation
 
-  elements.rendered = ->
-    this.validateElement()
+  elements.renderedFactory = (options) ->
+
+    return ->
+
+      component = this[MODULE_NAMESPACE]
+      component.validateElement()
+
+      # Custom callback
+      # ---------------
+
+      options.rendered && options.rendered.call(this)
+
 
   # Template helpers
   # ----------------
@@ -394,37 +475,44 @@
 
     value: ->
       inst = Template.instance()
-      return inst.value.get()
+      component = inst[MODULE_NAMESPACE]
+      return component.value.get()
 
     valid: -> # (Use to show positive state on element, like a check mark)
       inst = Template.instance()
-      return inst.valid.get()
+      component = inst[MODULE_NAMESPACE]
+      return component.valid.get()
 
     changed: -> # (Use to show or hide things after first valid value change)
       inst = Template.instance()
-      return inst.changed.get()
+      component = inst[MODULE_NAMESPACE]
+      return component.changed.get()
 
     isChild: -> # (Use to show or hide things regardless of parent state)
       inst = Template.instance()
-      return inst.isChild
+      component = inst[MODULE_NAMESPACE]
+      return component.isChild
 
     # These are from SimpleSchema functionality
     # -----------------------------------------
 
     label: ->
       inst = Template.instance()
-      if inst.schema? and inst.field?
-        return inst.schema.label(inst.field)
+      component = inst[MODULE_NAMESPACE]
+      if component.schema? and component.field?
+        return component.schema.label(component.field)
 
     instructions: ->
       inst = Template.instance()
-      if inst.schema? and inst.field?
-        return inst.schema.keyInstructions(inst.field)
+      component = inst[MODULE_NAMESPACE]
+      if component.schema? and component.field?
+        return component.schema.keyInstructions(component.field)
 
     errorMessage: ->
       inst = Template.instance()
-      if inst.schemaContext? and inst.field?
-        return inst.schemaContext.keyErrorMessage(inst.field)
+      component = inst[MODULE_NAMESPACE]
+      if component.schemaContext? and component.field?
+        return component.schemaContext.keyErrorMessage(component.field)
 
     # These are from the parent form block
     # ------------------------------------
@@ -432,29 +520,35 @@
 
     submitted: -> # (Use to delay showing errors until first submit)
       inst = Template.instance()
-      if inst.isChild
-        return inst.submitted.get()
+      component = inst[MODULE_NAMESPACE]
+      if component.isChild
+        return component.submitted.get()
       else
-        return inst.data.submitted || false
+        return inst.data.submitted || false # Original passed-in value (allows overwrites)
 
     loading: -> # (Use to disable elements while submit action is running)
       inst = Template.instance()
-      if inst.isChild
-        return inst.loading.get()
+      component = inst[MODULE_NAMESPACE]
+      if component.isChild
+        return component.loading.get()
       else
         return inst.data.loading || false
 
     success: -> # (Use to hide things after a successful submission)
       inst = Template.instance()
-      if inst.isChild
-        return inst.success.get()
+      component = inst[MODULE_NAMESPACE]
+      if component.isChild
+        return component.success.get()
       else
         return inst.data.success || false
 
 
 
+
+
   # Interface
   # ========================================================================================
+
 
   # Create a new reactive form element
   # ----------------------------------
@@ -466,20 +560,32 @@
       validationEvent: String
       validationValue: Match.Optional(Function)
 
+      # Allow normal callbacks for adding custom data, etc. (Issue #20)
+      created: Match.Optional(Function)
+      rendered: Match.Optional(Function)
+      destroyed: Match.Optional(Function)
+
     template = Template[obj.template]
 
-    options = {}
-    if obj.validationValue?
-      options.validationValue = obj.validationValue
-
     if template
+      options = {}
       evt = {}
+
+      for key in ['validationValue', 'created', 'rendered', 'destroyed']
+        if _.has(obj, key)
+          options[key] = obj[key]
+
       evt[obj.validationEvent + ' .reactive-element'] = (e, t) ->
-        t.validateElement()
+        t[MODULE_NAMESPACE].validateElement()
+
       template.created = elements.createdFactory(options)
-      template.rendered = elements.rendered
+      template.rendered = elements.renderedFactory(options)
+
+      options.destroyed && template.destroyed = options.destroyed
+
       template.helpers(elements.helpers)
-      template.events evt
+      template.events(evt)
+
 
   # Create a new form block
   # -----------------------
@@ -490,15 +596,25 @@
       template: String
       submitType: String
 
+      # Same as on elements... (Issue #20)
+      created: Match.Optional(Function)
+      rendered: Match.Optional(Function)
+      destroyed: Match.Optional(Function)
+
     template = Template[obj.template]
 
     if template
+      options = {}
       evt = {}
+
+      for key in ['created', 'rendered', 'destroyed']
+        if _.has(obj, key)
+          options[key] = obj[key]
 
       if obj.submitType is 'normal'
         evt['submit form'] = (e, t) ->
           e.preventDefault()
-          t.submit()
+          t[MODULE_NAMESPACE].submit()
 
       else if obj.submitType is 'enterKey'
         evt['submit form'] = (e, t) ->
@@ -507,16 +623,21 @@
         evt['keypress form'] = (e, t) ->
           if e.which is 13
             e.preventDefault()
-            t.submit()
+            t[MODULE_NAMESPACE].submit()
 
-      template.created = forms.created
-      template.rendered = forms.rendered
+      template.created = forms.createdFactory(options)
+
+      options.rendered && template.rendered = options.rendered
+      options.destroyed && template.destroyed = options.destroyed
+
       template.helpers(forms.helpers)
-      template.events evt
+      template.events(evt)
 
   createForm = (obj) ->
     deprecatedLogger('createForm', 'createFormBlock')
     return createFormBlock(obj)
+
+
 
 
 
