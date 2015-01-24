@@ -1,3 +1,9 @@
+1.9.1
+=====
+
+* Add missing `lib/init.coffee` file to `package.js`.
+* Fixes problem with `defaultFormBlock` from issue #15.
+
 1.9.0
 =====
 
