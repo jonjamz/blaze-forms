@@ -64,7 +64,7 @@
 1.6.0
 =====
 
-* All *form-level* helpers inside elements (`submitted`, `success`, `loading`) now default to `false`
+* All form-level helpers inside elements (`submitted`, `success`, `loading`) now default to `false`
   when the element is being used standalone.
 * Individual helpers can now be overridden on elements if they're specified on the element
   template's invocation.
