@@ -1,7 +1,7 @@
 1.9.0
 =====
 
-* Address issues #20 and #21
+* Address issues #20 and #21.
   * Support custom `created` `rendered` and `destroyed` callbacks on both Form Blocks and Elements.
   * Namespace component data.
 
