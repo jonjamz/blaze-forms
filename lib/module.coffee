@@ -496,6 +496,12 @@
     # These are from SimpleSchema functionality
     # -----------------------------------------
 
+    schema: -> # Use to get allowedValues, max, etc. for this field (Issue #8)
+      inst = Template.instance()
+      component = inst[MODULE_NAMESPACE]
+      if component.schema? and component.field?
+        return component.schema._schema[component.field]
+
     label: ->
       inst = Template.instance()
       component = inst[MODULE_NAMESPACE]

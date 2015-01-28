@@ -1,3 +1,9 @@
+1.10.0
+======
+
+* Address issue #8.
+  * Allow access to all schema properties in Element templates.
+
 1.9.2
 =====
 
