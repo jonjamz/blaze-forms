@@ -1,3 +1,8 @@
+1.10.6
+======
+
+* Update to support simple-schema `v1.3.0`.
+
 1.10.5
 ======
 

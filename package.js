@@ -1,7 +1,7 @@
 Package.describe({
   name: 'templates:forms',
   summary: 'Dead easy reactive forms with validation.',
-  version: '1.10.5',
+  version: '1.10.6',
   git: 'https://github.com/meteortemplates/forms.git'
 });
 
@@ -22,7 +22,7 @@ Package.onUse(function(api) {
     'coffeescript'
   ], 'server');
 
-  api.use('aldeed:simple-schema@1.2.0');
+  api.use('aldeed:simple-schema@1.3.0');
   api.imply('aldeed:simple-schema');
 
   // Templates
