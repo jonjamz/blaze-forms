@@ -239,7 +239,7 @@ Element templates have access to the following *local* helpers:
   * Use this to show validation state on the Element, for example a check mark.
   * Initial data passed into the Element is validated on `rendered`.
   * Defaults to *true* if no schema is provided.
-* `{{changed}}`
+* `{{changed}}` (inverse `{{unchanged}}`)
   * This is *true* once the Element's value has successfully changed.
   * Use this to show or hide things until the first validated value change is made.
   * Initial data passed into the Element doesn't trigger `changed`.
@@ -260,7 +260,7 @@ These helpers are available when a *SimpleSchema* is being used:
 
 While inside a Form Block, these *form-level* helpers will be available:
 
-* `{{submitted}}`
+* `{{submitted}}` (inverse `{{unsubmitted}}`)
   * Lets us know if a parent ReactiveForms Form Block has been submitted yet.
   * Use this to wrap `{{errorMessage}}` to delay showing Element invalidations until submit.
 * `{{loading}}`
@@ -478,11 +478,11 @@ Form Block templates have access to the following helpers:
 * `{{invalidCount}}`
   * This shows the number of currently invalid ReactiveForms Elements in the Form Block.
   * As Elements become valid, the number adjusts reactively.
-* `{{changed}}`
+* `{{changed}}` (inverse `{{unchanged}}`)
   * This is *true* if any valid value change has been made in the Form Block since it was rendered.
   * Initial data validation doesn't trigger `changed`, and neither do duplicate values.
   * If `changed` is triggered after `success`, it resets `submitted` and `success` to `false`.
-* `{{submitted}}`
+* `{{submitted}}` (inverse `{{unsubmitted}}`)
   * This is *true* if the form has ever been submitted.
   * Submission requires all form Elements to be valid.
 * `{{loading}}`
