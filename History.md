@@ -1,3 +1,11 @@
+1.10.7
+======
+
+* Address issue #37.
+  * Throttle `validationEvent` handler.
+* Revisit issue #31.
+  * Improve nested Element templates example in docs.
+
 1.10.6
 ======
 

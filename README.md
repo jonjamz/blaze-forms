@@ -329,7 +329,7 @@ Here are examples of two types of possible nested elements:
 ```handlebars
 <!-- Block helper to wrap any Elements -->
 <template name="myElementContainer">
-  <div class="element-container">
+  <div>
     <label>{{label}}</label>
     <br>
     <!-- Make sure to pass `field` -->

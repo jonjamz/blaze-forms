@@ -605,8 +605,9 @@
           options[key] = obj[key]
 
       if _.has(obj, 'validationEvent') # (Issue #33)
-        evt[obj.validationEvent + ' .reactive-element'] = (e, t) ->
+        evt[obj.validationEvent + ' .reactive-element'] = _.throttle (e, t) ->
           t[MODULE_NAMESPACE].validateElement()
+        , 300
 
       template.created = elements.createdFactory(options)
       template.rendered = elements.renderedFactory(options)
