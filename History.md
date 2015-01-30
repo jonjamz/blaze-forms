@@ -1,3 +1,10 @@
+1.10.3
+======
+
+* Address issue #34.
+  * Form Blocks now accept falsey initial data.
+  * The same form block can now be more easily used for inserts and updates.
+
 1.10.2
 ======
 

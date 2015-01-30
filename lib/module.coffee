@@ -54,7 +54,7 @@
       check self.data.schema, Match.Optional(SimpleSchema)
       check self.data.action, Function # (formObject) -> do something
       check self.data.data, Match.Optional Match.Where (x) ->
-        return _.isObject(x) && !_.isArray(x) && !_.isFunction(x) # (Issue #9)
+        return !x || _.isObject(x) && !_.isArray(x) && !_.isFunction(x) # (Issue #9, #34)
 
       # Schema
       # ------
