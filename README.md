@@ -278,12 +278,119 @@ However, you can override specific properties on an Element when you invoke it:
 {{> basicInput schema=schema field='testField' submitted=true}}
 ```
 
+#### Using nested Elements for cleaner code
+
+As you build out your elements, you may start to feel like abstracting some common code.
+
+Well, it only takes two steps:
+
+1. Create a partial Element template, but without the usual `.reactive-class`
+HTML element inside. You can use all the usual Element template helpers.
+
+2. Register the template using `ReactiveForms.createElement()`, but don't include the usual
+`validationEvent` field.
+
+Here are examples of two types of possible nested elements:
+
+*Separate templates for labels and error messages.*
+
+```handlebars
+<template name="bootstrapLabel">
+  <label class="control-label">
+    {{#if label}}
+      {{label}}
+    {{else}}
+      {{field}}
+    {{/if}}
+  </label>
+</template>
+
+<template name="bootstrapErrorMsg">
+  <p class="help-block">
+    {{#if valid}}
+      {{instructions}}
+    {{else}}
+      {{errorMessage}}
+    {{/if}}
+  </p>
+</template>
+
+<template name="bootstrapInput">
+  <div class="form-group  {{#unless valid}}has-error{{/unless}}">
+    {{> bootstrapLabel}}
+    <input name="{{field}}" class="form-control reactive-element" value="{{value}}">
+    {{> bootstrapErrorMsg}}
+  </div>
+</template>
+```
+
+*Wrapper template for Elements (use as a block helper).*
+
+```handlebars
+<!-- Block helper to wrap any Elements -->
+<template name="myElementContainer">
+  <div class="myElementContainer-container">
+    <label>{{label}}</label>
+    <br>
+    <!-- Make sure to pass `field` -->
+    {{> UI.contentBlock field=field}}
+    <!-- Show error if submitted but not successful -->
+    {{#if submitted}}
+      {{#if errorMessage}}<p class="error-message">{{errorMessage}}</p>{{/if}}
+    {{/if}}
+  </div>
+</template>
+
+<!-- Element template -->
+<template name="myInputElement">
+  <input placeholder={{schema.instructions}} class="reactive-element" value={{value}}>
+</template>
+
+<!-- Super-basic Form Block example -->
+<template name="myFormBlock">
+  <form>
+    {{#if success}}
+      <!-- Hide form, show message -->
+      <p>Form submitted!</p>
+    {{else}}
+      <!-- Show form -->
+      {{> UI.contentBlock data=data context=context}}
+      <hr>
+      <button type="submit">Submit</button>
+    {{/if}}
+  </form>
+</template>
+
+<!-- Here's a form using all the above components -->
+<template name="myLeadGenForm">
+  {{#myFormBlock action=action schema=schema data=data}}
+
+    {{#myElementContainer field='firstName'}}
+      {{> myInputElement}}
+    {{/components__elementContainer}}
+
+    {{#myElementContainer field='lastName'}}
+      {{> myInputElement}}
+    {{/components__elementContainer}}
+
+    {{#myElementContainer field='phoneNumber'}}
+      {{> myInputElement}}
+    {{/components__elementContainer}}
+
+  {{/myFormBlock}}
+</template>
+```
+
+Of course the above component templates need to be registered with `ReactiveForms` to work.
+
 #### Highlights
 
 > When running standalone (without being wrapped in a Form Block) you'll put the schema on the
 Element's template invocation. You can also override the other form-level helpers on Elements this way.
 
 > Be sure to add the reactive-element class to your Element so that it's selected when the form action is run.
+
+> Partial element templates can be used to abstract out common code. You can even create element block templates to wrap your elements.
 
 
 ### *ReactiveForms.createFormBlock()*

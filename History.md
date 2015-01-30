@@ -1,3 +1,9 @@
+1.10.5
+======
+
+* Address issue #31.
+  * Update docs to include a section on working with nested Element templates.
+
 1.10.4
 ======
 
