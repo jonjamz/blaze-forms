@@ -581,7 +581,7 @@
         if _.has(obj, key)
           options[key] = obj[key]
 
-      if _.has(obj, validationEvent) # (Issue #33)
+      if _.has(obj, 'validationEvent') # (Issue #33)
         evt[obj.validationEvent + ' .reactive-element'] = (e, t) ->
           t[MODULE_NAMESPACE].validateElement()
 
