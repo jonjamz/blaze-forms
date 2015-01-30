@@ -1,3 +1,10 @@
+1.10.8
+======
+
+* Address issue #38.
+  * If initial data has an `_id` field, pass that through to the form data context.
+  * Allows easier updates using the `action` function.
+
 1.10.7
 ======
 

@@ -151,6 +151,10 @@
 
       validatedValues = {} # (non-reactive form data context)
 
+      # Add `_id` if present (Issue #38)
+      if self.data.data && _.has(self.data.data, '_id')
+        validatedValues._id = self.data.data._id
+
       # Track which fields have changed when initial data is present (Issue #11)
       changedValues = self.data.data && {} || undefined
 
