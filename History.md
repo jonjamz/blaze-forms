@@ -1,3 +1,9 @@
+1.10.4
+======
+
+* Address issues #27 and #32.
+  * Provide more helpful error messages in Form Block field validation.
+
 1.10.3
 ======
 

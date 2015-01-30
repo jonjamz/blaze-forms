@@ -51,10 +51,33 @@
       # ----------
       # Validate passed-in data
 
-      check self.data.schema, Match.Optional(SimpleSchema)
-      check self.data.action, Function # (formObject) -> do something
-      check self.data.data, Match.Optional Match.Where (x) ->
-        return !x || _.isObject(x) && !_.isArray(x) && !_.isFunction(x) # (Issue #9, #34)
+      errorMessages = # (Issue #27, #32)
+
+        schema: "[forms] The `schema` field in a Form Block is optional, but if it exists,
+                 it must be an instance of SimpleSchema."
+
+        action: "[forms] The `action` function is missing or invalid in your Form Block.
+                 This is a required field--you can't submit your form without it."
+
+        data:   "[forms] The `data` field in a Form Block is optional, but if it exists, it
+                 must either be an object or a falsey value."
+
+      check self.data.schema, Match.Where (x) ->
+        unless Match.test x, Match.Optional(SimpleSchema)
+          throw new Meteor.Error(errorMessages.schema)
+        return true
+
+      check self.data.action, Match.Where (x) ->
+        unless Match.test x, Function
+          throw new Meteor.Error(errorMessages.action)
+        return true
+
+      check self.data.data, Match.Where (x) ->
+        test = Match.Optional Match.Where (x) ->
+          return !x || _.isObject(x) && !_.isArray(x) && !_.isFunction(x) # (Issue #9, #34)
+        unless Match.test x, test
+          throw new Meteor.Error(errorMessages.data)
+        return true
 
       # Schema
       # ------
