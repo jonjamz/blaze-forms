@@ -297,8 +297,8 @@ Here are examples of two types of possible nested elements:
 ```handlebars
 <template name="bootstrapLabel">
   <label class="control-label">
-    {{#if label}}
-      {{label}}
+    {{#if schema.label}}
+      {{schema.label}}
     {{else}}
       {{field}}
     {{/if}}
@@ -329,7 +329,7 @@ Here are examples of two types of possible nested elements:
 ```handlebars
 <!-- Block helper to wrap any Elements -->
 <template name="myElementContainer">
-  <div class="myElementContainer-container">
+  <div class="element-container">
     <label>{{label}}</label>
     <br>
     <!-- Make sure to pass `field` -->
@@ -367,15 +367,15 @@ Here are examples of two types of possible nested elements:
 
     {{#myElementContainer field='firstName'}}
       {{> myInputElement}}
-    {{/components__elementContainer}}
+    {{/myElementContainer}}
 
     {{#myElementContainer field='lastName'}}
       {{> myInputElement}}
-    {{/components__elementContainer}}
+    {{/myElementContainer}}
 
     {{#myElementContainer field='phoneNumber'}}
       {{> myInputElement}}
-    {{/components__elementContainer}}
+    {{/myElementContainer}}
 
   {{/myFormBlock}}
 </template>
