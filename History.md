@@ -1,3 +1,10 @@
+1.11.0
+======
+
+* Address issue #39.
+  * Add `unchanged` and `unsubmitted` helpers.
+* Fix typo in docs.
+
 1.10.8
 ======
 

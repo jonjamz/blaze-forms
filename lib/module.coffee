@@ -318,10 +318,20 @@
       component = inst[MODULE_NAMESPACE]
       return component.changed.get()
 
+    unchanged: ->
+      inst = Template.instance()
+      component = inst[MODULE_NAMESPACE]
+      return !component.changed.get()
+
     submitted: ->
       inst = Template.instance()
       component = inst[MODULE_NAMESPACE]
       return component.submitted.get()
+
+    unsubmitted: ->
+      inst = Template.instance()
+      component = inst[MODULE_NAMESPACE]
+      return !component.submitted.get()
 
 
 
@@ -515,6 +525,11 @@
       component = inst[MODULE_NAMESPACE]
       return component.changed.get()
 
+    unchanged: -> # (Use to show or hide things after first valid value change)
+      inst = Template.instance()
+      component = inst[MODULE_NAMESPACE]
+      return !component.changed.get()
+
     isChild: -> # (Use to show or hide things regardless of parent state)
       inst = Template.instance()
       component = inst[MODULE_NAMESPACE]
@@ -558,6 +573,14 @@
         return component.submitted.get()
       else
         return inst.data.submitted || false # Original passed-in value (allows overwrites)
+
+    unsubmitted: ->
+      inst = Template.instance()
+      component = inst[MODULE_NAMESPACE]
+      if component.isChild
+        return !component.submitted.get()
+      else
+        return inst.data.unsubmitted || false
 
     loading: -> # (Use to disable elements while submit action is running)
       inst = Template.instance()

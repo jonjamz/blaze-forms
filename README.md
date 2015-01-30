@@ -284,7 +284,7 @@ As you build out your elements, you may start to feel like abstracting some comm
 
 Well, it only takes two steps:
 
-1. Create a partial Element template, but without the usual `.reactive-class`
+1. Create a partial Element template, but without the usual `.reactive-element`
 HTML element inside. You can use all the usual Element template helpers.
 
 2. Register the template using `ReactiveForms.createElement()`, but don't include the usual
@@ -307,7 +307,7 @@ Here are examples of two types of possible nested elements:
 
 <template name="bootstrapErrorMsg">
   <p class="help-block">
-    {{#if valid}}
+    {{#if ../valid}}
       {{instructions}}
     {{else}}
       {{errorMessage}}

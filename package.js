@@ -1,7 +1,7 @@
 Package.describe({
   name: 'templates:forms',
   summary: 'Dead easy reactive forms with validation.',
-  version: '1.10.8',
+  version: '1.11.0',
   git: 'https://github.com/meteortemplates/forms.git'
 });
 

@@ -24,6 +24,12 @@ Template.registerHelper 'context', ->
     changed: ->
       return context.changed.get()
 
+    unchanged: ->
+      return !context.changed.get()
+
     submitted: ->
       return context.submitted.get()
+
+    unsubmitted: ->
+      return !context.submitted.get()
   }
