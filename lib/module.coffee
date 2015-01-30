@@ -563,7 +563,7 @@
   createElement = (obj) ->
     check obj, Match.ObjectIncluding
       template: String
-      validationEvent: String
+      validationEvent: Match.Optional(String)
       validationValue: Match.Optional(Function)
 
       # Allow normal callbacks for adding custom data, etc. (Issue #20)
@@ -581,8 +581,9 @@
         if _.has(obj, key)
           options[key] = obj[key]
 
-      evt[obj.validationEvent + ' .reactive-element'] = (e, t) ->
-        t[MODULE_NAMESPACE].validateElement()
+      if _.has(obj, validationEvent) # (Issue #33)
+        evt[obj.validationEvent + ' .reactive-element'] = (e, t) ->
+          t[MODULE_NAMESPACE].validateElement()
 
       template.created = elements.createdFactory(options)
       template.rendered = elements.renderedFactory(options)

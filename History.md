@@ -1,3 +1,11 @@
+1.10.1
+======
+
+* Address issue #33.
+  * `validationEvent` is now optional, and the event handler will only be added to an element
+    template if it exists.
+  * This allows easier creation of nested elements and wrapped elements.
+
 1.10.0
 ======
 
