@@ -346,38 +346,27 @@ Here are examples of two types of possible nested elements:
   <input placeholder={{schema.instructions}} class="reactive-element" value={{value}}>
 </template>
 
-<!-- Super-basic Form Block example -->
-<template name="myFormBlock">
-  <form>
-    {{#if success}}
-      <!-- Hide form, show message -->
-      <p>Form submitted!</p>
-    {{else}}
-      <!-- Show form -->
-      {{> UI.contentBlock data=data context=context}}
-      <hr>
-      <button type="submit">Submit</button>
-    {{/if}}
-  </form>
-</template>
-
 <!-- Here's a form using all the above components -->
 <template name="myLeadGenForm">
-  {{#myFormBlock action=action schema=schema data=data}}
+  {{#defaultFormBlock action=action schema=schema data=data}}
+    {{#if success}}
+      <p>Success! Form submitted.</p>
+    {{else}}
+      {{#myElementContainer field='firstName'}}
+        {{> myInputElement}}
+      {{/myElementContainer}}
 
-    {{#myElementContainer field='firstName'}}
-      {{> myInputElement}}
-    {{/myElementContainer}}
+      {{#myElementContainer field='lastName'}}
+        {{> myInputElement}}
+      {{/myElementContainer}}
 
-    {{#myElementContainer field='lastName'}}
-      {{> myInputElement}}
-    {{/myElementContainer}}
-
-    {{#myElementContainer field='phoneNumber'}}
-      {{> myInputElement}}
-    {{/myElementContainer}}
-
-  {{/myFormBlock}}
+      {{#myElementContainer field='phoneNumber'}}
+        {{> myInputElement}}
+      {{/myElementContainer}}
+    {{/if}}
+    <hr>
+    <button type="submit">Submit</button>
+  {{/defaultFormBlock}}
 </template>
 ```
 
