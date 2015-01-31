@@ -1,3 +1,20 @@
+1.12.0
+======
+
+* Major update with many improvements.
+* Addresses issues #40, #41, #42, #43, #44, and #45. Fixes regression from issue #37.
+  * Add robust support for dealing with reactively changing form data.
+  * Remote changes to data being actively edited in a form can now be elegantly revealed to
+    the user in real-time, using the `{{remoteValueChange}}` and `{{newRemoteValue}}` template
+    helpers. There are also two template instance methods to hook into from event handlers.
+  * Fix handling of initial data and how it bypasses the `changed` state.
+  * On nested Element templates that don't actually provide data to the form, avoid running
+    duplicate initial validation in the `rendered` callback.
+  * `ReactiveForms.namespace` now allows programmatic access to whatever internal namespace
+    the package uses in template instances.
+  * Update docs with a chapter on working with remote data.
+* Refactor and clean up code/comments.
+
 1.11.0
 ======
 

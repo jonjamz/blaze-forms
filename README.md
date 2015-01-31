@@ -507,6 +507,70 @@ accessible in the UI after the first *success* (or provide a button that trigger
 > ReactiveForms Elements inside a Form Block affect the form's validity. They are reactively
 validated with *SimpleSchema* at the form-level, thanks to a shared schema context.
 
+Working With Reactive Form Data
+-------------------------------
+
+Due to the real-time nature of Meteor, one can only assume that while editing some existing
+data in a form, the original data might change before the edited work is submitted.
+
+When data is changed remotely during a form session, there are three obvious ways to handle the experience:
+
+1. Ignore the change and let the user submit their new form.
+2. Patch in the changes mid-session without any real prompt.
+3. Notify the user of remote changes and give them the opportunity to view and import those changes into the current session.
+
+This package supports all three of the above options, but special care has been taken to ensure a good experience in the case of #3.
+
+Here's a working example of how easy it is to present a user with the option to accept or ignore remote changes.
+
+This is purely focused on text inputs--the other types of form elements will have different experiences and constraints.
+
+```handlebars
+<template name="inputElement">
+  <input type={{type}} placeholder={{schema.instructions}} class="reactive-element" value={{value}}>
+  {{#if remoteValueChange}}
+    <p style="color:black">
+      This field has been updated remotely. Load the latest
+      <span title={{newRemoteValue}}>changes</span>?
+      <button class="accept-changes">Load</button> <button class="ignore-changes">Ignore</button>
+    </p>
+  {{/if}}
+</template>
+```
+
+```javascript
+Template['inputElement'].events({
+  'click .accept-changes': function (e, t) {
+    e.preventDefault();
+    var inst = Template.instance();
+    inst[ReactiveForms.namespace].acceptValueChange();
+  },
+  'click .ignore-changes': function (e, t) {
+    e.preventDefault();
+    var inst = Template.instance();
+    inst[ReactiveForms.namespace].ignoreValueChange();
+  }
+});
+```
+
+As you can see, we have access to the following template helpers:
+
+* `{{remoteValueChange}}`
+  * This is *true* if this Element's data has changed elsewhere during the current session.
+    It resets every time changes are accepted or ignored.
+  * Use this to toggle the message.
+* `{{newRemoteValue}}`
+  * This contains the actual value of the changed data. In our example, we put it in a `name`
+    attribute, but it could be used for a tooltip or anything else.
+
+We can control how we deal with remote changes using these template instance methods:
+
+* `acceptValueChange()`
+  * A method that copies the changed data into the current form data context (and thus into
+    the Elements, depending on your configuration).
+* `ignoreValueChange()`
+  * A method that resets `remoteValueChange` to *false*.
+
 Other Forms Packages
 --------------------
 
