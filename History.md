@@ -1,3 +1,8 @@
+1.12.1
+======
+
+* Remove leftover console log.
+
 1.12.0
 ======
 

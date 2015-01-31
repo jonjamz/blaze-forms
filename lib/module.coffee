@@ -518,7 +518,6 @@
           # We need an object to validate with--
           object = _.extend({}, component.schemaContext.data) # (Issue #4)
           object[component.field] = val
-          console.log "validating", component.field, val
 
           # Get true/false for validation (validating against this field only).
           isValid = component.schemaContext.validateOne(object, component.field)
