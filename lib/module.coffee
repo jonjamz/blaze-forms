@@ -99,7 +99,7 @@
       # Ensure states are mutually exclusive--set with these methods only.
       setState = (activeState) ->
         for state in ['success', 'failed', 'loading', 'invalid']
-          state is activeState && component[state].set(true) || component[state].set(false)
+          component[state].set(state is activeState)
 
       setSuccess = ->
         setState('success')
