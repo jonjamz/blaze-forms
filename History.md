@@ -1,3 +1,11 @@
+1.12.3
+======
+
+* Address issue #46.
+  * Clearly differentiate between changes enacted by the user (from event handlers) and
+    changes from other sources.
+  * Only trigger `changed` state on user-enacted changes to the form.
+
 1.12.2
 ======
 

@@ -158,37 +158,29 @@
       # When initial data is present, keep track of which fields are modified (Issue #11).
       changedValues = self.data.data && {} || undefined
 
-      # Set validated value to form data context
+      # Set validated value in form data context
       # ----------------------------------------
 
-      component.setValidatedValue = (field, value) ->
+      component.setValidatedValue = (field, value, fromUserEvent) ->
 
         # First, opt into setting `changed` if this is a unique update.
         if _.has(validatedValues, field)
           if !_.isEqual(value, validatedValues[field])
 
-            # Set value to form data context, optionally set `changedValues`.
+            # Set value in form data context, optionally set `changedValues`.
             validatedValues[field] = value
-            changedValues && changedValues[field] = value
 
-            setChanged()
+            if fromUserEvent
+              changedValues && changedValues[field] = value
+              setChanged()
 
         # If the field doesn't exist in validatedValues yet, add it.
         else
           validatedValues[field] = value
 
-          # If initial data was provided--
-          # Initial validation passing back that value shouldn't trigger `changed`.
-          # Neither should setting `undefined` values for the first time, which is likely
-          # the result of validating `undefined` against an optional field (Issue #41).
-          if self.data.data
-            isInitialData = _.has(self.data.data, field) && _.isEqual(self.data.data[field], value)
-
-            unless isInitialData || _.isUndefined(value)
-              setChanged()
-
-          # If no initial data was provided, trigger `changed` because it's a new value.
-          else
+          # If this was a user-enacted change to the data, set `changed`.
+          # Initial data and schema-provided data will not trigger `changed` (Issue #46).
+          if fromUserEvent
             setChanged()
 
       # Submit
@@ -427,18 +419,18 @@
       component.valueDep = new Tracker.Dependency
 
       # Save a value--usually after successful validation
-      setValue = setValidatedValue = (value) ->
+      setValue = setValidatedValue = (value, fromUserEvent) ->
 
         # Initial value from passed-in data will get validated on render.
         # That shouldn't count as `changed`.
-        # This fixes that, along with adding a general idempotency.
+        # This fixes that, (with `fromUserEvent`) along with adding a general idempotency.
         unless _.isEqual(component.value.get(), value)
           component.value.set(value)
-          component.changed.set(true)
+          fromUserEvent && component.changed.set(true)
 
         # Save to a parent form block if possible
         if component.isChild && parentData.setValidatedValue?
-          parentData.setValidatedValue(component.field, value)
+          parentData.setValidatedValue(component.field, value, fromUserEvent)
 
       # Support remote changes (Issue #40)
       # ----------------------------------
@@ -460,11 +452,14 @@
       # Import and validate remote changes into current form context.
       component.acceptValueChange = ->
         component.remoteValueChange.set(false)
-        component.value.set(component.newRemoteValue.get())
+        component.value.set(component.newRemoteValue.get()) # Set even if invalid.
         component.valueDep.changed()
 
         # This is necessary otherwise the new data doesn't show in the DOM.
         Deps.afterFlush ->
+
+          # Don't trigger `changed` for these updates.
+          # They're already saved, hence the prompt (discuss this).
           component.validateElement()
 
       # Store remote data changes without replacing the local value.
@@ -480,12 +475,16 @@
           # Update reactiveValue without tracking it.
           Tracker.nonreactive ->
 
+            # If the remote value is different from what's in initial data, set `newRemoteValue`.
+            # Otherwise, leave it--the user's edits are still just as valid.
             if !_.isEqual(component.value.get(), fieldValue)
               component.newRemoteValue.set(fieldValue)
 
+              # If our initial data didn't have this field, sub it in (should revisit this).
               if _.isUndefined(component.value.get())
                 component.value.set(fieldValue)
 
+              # Let us know there's been a remote change.
               component.remoteValueChange.set(true)
 
       # Validation
@@ -506,7 +505,7 @@
       # Callback for `validationEvent` trigger
       # --------------------------------------
 
-      component.validateElement = ->
+      component.validateElement = (fromUserEvent) ->
 
         el = self.find('.reactive-element')
 
@@ -527,7 +526,7 @@
 
           # Set `value` property, locally and on `component.field` on a parent, if valid.
           if isValid is true
-            setValidatedValue(val)
+            setValidatedValue(val, fromUserEvent)
             return
 
         else
@@ -540,7 +539,7 @@
           val = getValidationValue(el, noop, self)
 
           # Set the value just for templates--can't validate without a schema.
-          setValue(val)
+          setValue(val, fromUserEvent)
           return
 
       # Add component to custom namespace (Issue #21).
@@ -718,7 +717,7 @@
 
       if _.has(obj, 'validationEvent') # (Issue #33)
         evt[obj.validationEvent + ' .reactive-element'] = (e, t) ->
-          t[MODULE_NAMESPACE].validateElement()
+          t[MODULE_NAMESPACE].validateElement(true) # Flag `fromUserEvent` as true.
 
         # It has `validationEvent`, so assume it tracks events and inputs data.
         options.providesData = true
