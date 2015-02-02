@@ -1,3 +1,16 @@
+1.12.4
+======
+
+* Address issue #47.
+  * The reactive data context and `valueDeps` for an Element now exist at the Form Block level,
+    which allows all element templates with the same field in that form to share the same value-
+    dependent states. Hopefully this also addresses lingering concerns from #31.
+  * Validation is now triggered whenever data is changed, meaning validation happens after data
+    is set, rather than before. This doesn't mean anything to the end-user, because submission
+    won't run unless the data is valid (provided a schema exists). It would be preferred to
+    ensure that only valid data reaches the form-level data context, however.
+* Refactor.
+
 1.12.3
 ======
 

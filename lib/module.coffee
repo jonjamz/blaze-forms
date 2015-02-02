@@ -101,18 +101,6 @@
         for state in ['success', 'failed', 'loading', 'invalid']
           component[state].set(state is activeState)
 
-      setSuccess = ->
-        setState('success')
-
-      setFailed = ->
-        setState('failed')
-
-      setLoading = ->
-        setState('loading')
-
-      setInvalid = ->
-        setState('invalid')
-
       # Schema
       # ------
       # Set schema if exists (optional).
@@ -158,6 +146,17 @@
       # When initial data is present, keep track of which fields are modified (Issue #11).
       changedValues = self.data.data && {} || undefined
 
+      # When elements are wrapped in a form block, store the element's reactive data here.
+      elementValues = {}
+
+      # Set new reactive value in `elementValues` or get the existing property.
+      # Also provide a dependency for element templates to track.
+      component.ensureElementValue = (field, value) ->
+        return _.has(elementValues, field) && elementValues[field] ||
+          elementValues[field] =
+            value: new Blaze.ReactiveVar(value)
+            dep: new Tracker.Dependency
+
       # Set validated value in form data context
       # ----------------------------------------
 
@@ -194,18 +193,18 @@
         # If any values are bad, return without running the action function.
         if _.has(component, 'schemaContext')
           if !!component.schemaContext.invalidKeys().length
-            setInvalid()
+            setState('invalid')
             return
 
         # Invoke loading state until action function returns failed or success.
-        setLoading()
+        setState('loading')
 
         # Send form elements and callbacks to action function.
         # The action function is bound to validatedValues.
         formElements = self.findAll('.reactive-element')
         callbacks =
-          success: setSuccess
-          failed: setFailed
+          success: ->   setState('success')
+          failed: ->    setState('failed')
 
         self.data.action.call(validatedValues, formElements, callbacks, changedValues)
 
@@ -234,11 +233,8 @@
       component = inst[MODULE_NAMESPACE]
 
       return {
-
-        # Prevent throwing errors for missing schema/schemaContext (Issue #27)
         schema: _.has(inst.data, 'schema') && inst.data.schema || null
         schemaContext: _.has(component, 'schemaContext') && component.schemaContext || null
-
         submit: component.submit
         submitted: component.submitted
         loading: component.loading
@@ -246,6 +242,7 @@
         failed: component.failed
         invalid: component.invalid
         changed: component.changed
+        ensureElementValue: component.ensureElementValue
         setValidatedValue: component.setValidatedValue
       }
 
@@ -409,17 +406,34 @@
       component.valid = new Blaze.ReactiveVar(true)
       component.changed = new Blaze.ReactiveVar(false)
 
+      # Validate a value for this field.
+      # --------------------------------
+
+      validateValue = (val) ->
+
+        # We need an object to validate with--
+        object = _.extend({}, component.schemaContext.data) # (Issue #4)
+        object[component.field] = val
+
+        # Get true/false for validation (validating against this field only).
+        isValid = component.schemaContext.validateOne(object, component.field)
+
+        # Set `valid` property to reflect in templates.
+        component.valid.set(isValid)
+        return isValid
+
       # Value
       # -----
       # Track this element's latest validated value, starting with init data
 
-      component.value = new Blaze.ReactiveVar(initValue)
+      # Get reactive value and deps from form block if available.
+      ensureValue = parentData?.ensureElementValue?(component.field, initValue)
 
-      # Update non-reactive helper when value changes
-      component.valueDep = new Tracker.Dependency
+      component.value = ensureValue && ensureValue.value || new Blaze.ReactiveVar(initValue)
+      component.valueDep = ensureValue && ensureValue.dep || new Tracker.Dependency
 
       # Save a value--usually after successful validation
-      setValue = setValidatedValue = (value, fromUserEvent) ->
+      setValue = (value, fromUserEvent) ->
 
         # Initial value from passed-in data will get validated on render.
         # That shouldn't count as `changed`.
@@ -428,9 +442,33 @@
           component.value.set(value)
           fromUserEvent && component.changed.set(true)
 
-        # Save to a parent form block if possible
+        # Save to a parent form block if possible ()
         if component.isChild && parentData.setValidatedValue?
           parentData.setValidatedValue(component.field, value, fromUserEvent)
+
+      # Automatically validate every time the value changes.
+      # Because we check `options.providesData` this should only fire once per element.
+      # Also, this will only run if we're using SimpleSchema.
+      options.providesData && component.schemaContext? && self.autorun ->
+        value = component.value.get()
+        Tracker.nonreactive ->
+
+          # Use `validateValue` to skip dealing with the DOM (this is below).
+          isValid = validateValue(value)
+
+          # Add validated value to parent form block's `validatedValues`
+
+          # XXX Note THIS IS WHERE WE SHOULD SEND DATA TO FORM BLOCK CONTEXT.
+          # But WE CAN'T DO IT HERE BECAUSE WE DON'T KNOW IF IT'S FROM A USER EVENT.
+
+          # This doesn't actually cause any problems, but it's not ideal--
+          # Invalid data should never make its way to the form data context.
+
+          # Need to possibly update how we handle `changed` event.
+
+          # For now, we're adding invalid data directly into both the reactive element
+          # data context and the non-reactive form data context and depending on this
+          # autorun function to do validation afterwards.
 
       # Support remote changes (Issue #40)
       # ----------------------------------
@@ -452,15 +490,8 @@
       # Import and validate remote changes into current form context.
       component.acceptValueChange = ->
         component.remoteValueChange.set(false)
-        component.value.set(component.newRemoteValue.get()) # Set even if invalid.
+        setValue(component.newRemoteValue.get()) # Set even if invalid. Autorun validates.
         component.valueDep.changed()
-
-        # This is necessary otherwise the new data doesn't show in the DOM.
-        Deps.afterFlush ->
-
-          # Don't trigger `changed` for these updates.
-          # They're already saved, hence the prompt (discuss this).
-          component.validateElement()
 
       # Store remote data changes without replacing the local value.
       component.newRemoteValue = new Blaze.ReactiveVar(initValue)
@@ -480,15 +511,11 @@
             if !_.isEqual(component.value.get(), fieldValue)
               component.newRemoteValue.set(fieldValue)
 
-              # If our initial data didn't have this field, sub it in (should revisit this).
-              if _.isUndefined(component.value.get())
-                component.value.set(fieldValue)
-
               # Let us know there's been a remote change.
               component.remoteValueChange.set(true)
 
-      # Validation
-      # ----------
+      # Callback for `validationEvent` trigger
+      # --------------------------------------
 
       # Get value to test from `.reactive-element` (user-provided, optionally).
       getValidationValue = options.validationValue || (el, clean, template) ->
@@ -502,45 +529,18 @@
         cln = component.schema.clean(obj, options)
         return cln[component.field]
 
-      # Callback for `validationEvent` trigger
-      # --------------------------------------
-
       component.validateElement = (fromUserEvent) ->
-
         el = self.find('.reactive-element')
 
-        if component.schema? and component.schemaContext?
+        # Can't pass in `clean` method if user isn't using SimpleSchema.
+        cleanValue = component.schemaContext? && cleanValue || (arg) ->
+          return arg
 
-          # Get value from DOM element and alter value to avoid validation errors.
-          val = getValidationValue(el, cleanValue, self)
+        # Get value from DOM element and alter value to avoid validation errors.
+        val = getValidationValue(el, cleanValue, self)
 
-          # We need an object to validate with--
-          object = _.extend({}, component.schemaContext.data) # (Issue #4)
-          object[component.field] = val
-
-          # Get true/false for validation (validating against this field only).
-          isValid = component.schemaContext.validateOne(object, component.field)
-
-          # Set `valid` property to reflect in templates.
-          component.valid.set(isValid)
-
-          # Set `value` property, locally and on `component.field` on a parent, if valid.
-          if isValid is true
-            setValidatedValue(val, fromUserEvent)
-            return
-
-        else
-
-          # Can't pass in `clean` method if user isn't using SimpleSchema.
-          # Could provide a different utility method in the future for this...
-          noop = (arg) ->
-            return arg
-
-          val = getValidationValue(el, noop, self)
-
-          # Set the value just for templates--can't validate without a schema.
-          setValue(val, fromUserEvent)
-          return
+        # Set value.
+        setValue(val, fromUserEvent)
 
       # Add component to custom namespace (Issue #21).
       ext = {}
@@ -589,7 +589,8 @@
     newRemoteValue: -> # Stores any underlying changes in the data, if reactive.
       inst = Template.instance()
       component = inst[MODULE_NAMESPACE]
-      return component.newRemoteValue.get()
+      value = component.newRemoteValue.get()
+      return value? && value.toString()
 
     remoteValueChange: -> # Has there been any underlying change during this form session?
       inst = Template.instance()
