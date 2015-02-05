@@ -85,6 +85,7 @@ Template['testForm'].helpers({
 ```
 
 The **action function** runs when the form is submitted. It takes three params, as shown above:
+
 * `els`
   * This contains any HTML elements in the Form Block with class `.reactive-element`.
   * You may use this to retrieve data and save it to the database.
@@ -108,6 +109,7 @@ console.log(this); // Returns {testField: "xxx"}
 ```
 
 Data from Elements passed into the action function is **guaranteed to be valid**, considering:
+
 * You provided an adequate schema.
 * You used ReactiveForms Elements.
 * You specified the correct schema field for each Element (see `basicInput` in the next example).
