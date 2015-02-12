@@ -1,3 +1,9 @@
+1.12.5
+======
+
+* Revisit issue #27.
+  * Rewrite validation so that optional fields are only checked if they exist.
+
 1.12.4
 ======
 

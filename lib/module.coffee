@@ -68,22 +68,20 @@
         # Track reactive changes to data and re-validate.
         data = Template.currentData()
 
-        check data.schema, Match.Where (x) ->
-          unless Match.test x, Match.Optional(SimpleSchema)
-            canWarn && console.warn(errorMessages.schema)
-          return true
+        # Schema is optional (Issue #27).
+        if _.has(data, 'schema') && !Match.test data.schema, Match.Optional(SimpleSchema)
+          canWarn && console.warn(errorMessages.schema)
 
-        check data.action, Match.Where (x) ->
-          unless Match.test x, Function
-            canWarn && console.warn(errorMessages.action)
-          return true
+        # Action is required.
+        unless _.has(data, 'action') && Match.test data.action, Function
+          canWarn && console.warn(errorMessages.action)
 
-        check data.data, Match.Where (x) ->
-          test = Match.Optional Match.Where (x) ->
-            return !x || _.isObject(x) && !_.isArray(x) && !_.isFunction(x) # (Issue #9, #34)
-          unless Match.test x, test
-            canWarn && console.warn(errorMessages.data)
-          return true
+        # Initial data is optional.
+        dataTest = Match.Optional Match.Where (x) ->
+          return !x || _.isObject(x) && !_.isArray(x) && !_.isFunction(x) # (Issue #9, #34)
+
+        if _.has(data, 'data') && !Match.test data.data, dataTest
+          canWarn && console.warn(errorMessages.data)
 
       # Basic states
       # ------------
