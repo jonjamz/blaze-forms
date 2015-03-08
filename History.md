@@ -1,3 +1,8 @@
+1.13.1
+======
+
+* Fix incorrect var name in previous update.
+
 1.13.0
 ======
 

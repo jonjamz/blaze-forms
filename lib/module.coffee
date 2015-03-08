@@ -817,7 +817,7 @@
         # Map all events to selector and return a single string.
         selectorWithEvents = Match.test(obj.validationEvent, String) &&
           "#{obj.validationEvent} #{options.validationSelector}" ||
-          _.map(obj.validationEvent, (e) -> return "#{e} #{validationSelector}").join(', ')
+          _.map(obj.validationEvent, (e) -> return "#{e} #{options.validationSelector}").join(', ')
 
         # Create event handler to pass value through validation.
         evt[selectorWithEvents] = (e, t) ->
