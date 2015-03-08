@@ -352,7 +352,6 @@ Here are examples of two types of possible nested elements:
   <div>
     <label>{{label}}</label>
     <br>
-    <!-- Make sure to pass `field` -->
     {{> UI.contentBlock}}
     <!-- Show error if submitted but not successful -->
     {{#if submitted}}
