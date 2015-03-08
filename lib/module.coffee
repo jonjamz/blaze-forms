@@ -87,17 +87,23 @@
       # ------------
       # Set by the submit method below.
 
-      component.changed   = new Blaze.ReactiveVar(false)
-      component.submitted = new Blaze.ReactiveVar(false)
-      component.failed    = new Blaze.ReactiveVar(false)
-      component.success   = new Blaze.ReactiveVar(false)
-      component.invalid   = new Blaze.ReactiveVar(false)
-      component.loading   = new Blaze.ReactiveVar(false)
+      component.changed   = new ReactiveVar(false)
+      component.submitted = new ReactiveVar(false)
+      component.failed    = new ReactiveVar(false)
+      component.success   = new ReactiveVar(false)
+      component.invalid   = new ReactiveVar(false)
+      component.loading   = new ReactiveVar(false)
+
+      # State messages
+      component.successMessage = new ReactiveVar(null)
+      component.failedMessage  = new ReactiveVar(null)
 
       # Ensure states are mutually exclusive--set with these methods only.
-      setState = (activeState) ->
+      setState = (activeState, message) ->
         for state in ['success', 'failed', 'loading', 'invalid']
           component[state].set(state is activeState)
+        if message && component[activeState + 'Message']
+          component[activeState + 'Message'].set(message)
 
       # Schema
       # ------
@@ -152,7 +158,7 @@
       component.ensureElementValue = (field, value) ->
         return _.has(elementValues, field) && elementValues[field] ||
           elementValues[field] =
-            value: new Blaze.ReactiveVar(value)
+            value: new ReactiveVar(value)
             dep: new Tracker.Dependency
 
       # Set validated value in form data context
@@ -180,6 +186,40 @@
           if fromUserEvent
             setChanged()
 
+      # Reset
+      # -----
+      # Keeping track of reset functions without tying them to specific fields allows there
+      # to be several elements for the same field. Granted these will fight for a single
+      # property in the form data context, but regardless, both will be cleared.
+      #
+      # When sending reset functions, make sure they use the element's template context, not
+      # some general context. Keep it scope-limited.
+
+      resetFunctions = []
+
+      resetForm = ->
+        for func in resetFunctions
+          func()
+        validatedValues = {} # Reset form data context.
+        setState(false) # Reset all form states to false.
+
+        # Clear all old messages.
+        component.successMessage.set(null)
+        component.failedMessage.set(null)
+
+      component.addResetFunction = (func) ->
+        resetFunctions.push(func)
+
+      # Selectors
+      # ---------
+      # Track any custom `validationSelector` from elements.
+
+      elementSelectors = ['.reactive-element']
+
+      component.addCustomSelector = (selector) ->
+        unless selector in elementSelectors
+          elementSelectors.push(selector)
+
       # Submit
       # ------
 
@@ -199,10 +239,11 @@
 
         # Send form elements and callbacks to action function.
         # The action function is bound to validatedValues.
-        formElements = self.findAll('.reactive-element')
+        formElements = self.findAll(elementSelectors.join(', '))
         callbacks =
-          success: ->   setState('success')
-          failed: ->    setState('failed')
+          success: (message) -> setState('success', message)
+          failed:  (message) -> setState('failed',  message)
+          reset:             -> resetForm()
 
         self.data.action.call(validatedValues, formElements, callbacks, changedValues)
 
@@ -242,47 +283,9 @@
         changed: component.changed
         ensureElementValue: component.ensureElementValue
         setValidatedValue: component.setValidatedValue
+        addResetFunction: component.addResetFunction
+        addCustomSelector: component.addCustomSelector
       }
-
-    # These are passed into the form to be in the elements' parent scope (deprecated)
-    # ------------------------------------------------------------------
-
-    __schemaContext__: ->
-      deprecatedLogger('__schemaContext__', 'context')
-      inst = Template.instance()
-      component = inst[MODULE_NAMESPACE]
-      if _.has(component, 'schemaContext')
-        return component.schemaContext
-
-    __setValidatedValue__: ->
-      deprecatedLogger('__setValidatedValue__', 'context')
-      inst = Template.instance()
-      component = inst[MODULE_NAMESPACE]
-      return component.setValidatedValue
-
-    __submit__: ->
-      deprecatedLogger('__submit__', 'context')
-      inst = Template.instance()
-      component = inst[MODULE_NAMESPACE]
-      return component.submit
-
-    __submitted__: ->
-      deprecatedLogger('__submitted__', 'context')
-      inst = Template.instance()
-      component = inst[MODULE_NAMESPACE]
-      return component.submitted
-
-    __loading__: ->
-      deprecatedLogger('__loading__', 'context')
-      inst = Template.instance()
-      component = inst[MODULE_NAMESPACE]
-      return component.loading
-
-    __success__: ->
-      deprecatedLogger('__success__', 'context')
-      inst = Template.instance()
-      component = inst[MODULE_NAMESPACE]
-      return component.success
 
     # These are used as real helpers
     # ------------------------------
@@ -292,10 +295,20 @@
       component = inst[MODULE_NAMESPACE]
       return component.failed.get()
 
+    failedMessage: ->
+      inst = Template.instance()
+      component = inst[MODULE_NAMESPACE]
+      return component.failedMessage.get()
+
     success: ->
       inst = Template.instance()
       component = inst[MODULE_NAMESPACE]
       return component.success.get()
+
+    successMessage: ->
+      inst = Template.instance()
+      component = inst[MODULE_NAMESPACE]
+      return component.successMessage.get()
 
     invalidCount: ->
       inst = Template.instance()
@@ -357,30 +370,68 @@
       self = this
       component = {}
       initValue = null
-      parentData = Template.parentData(1)
+      formBlockLevel = 1
+
 
       # Basic setup
       # -----------
 
       component.field = self.data.field || null
 
-      # Support a single context object (Issue #15).
-      if parentData && _.has(parentData, 'context')
+      # Allow skipping a prompt when underlying data changes.
+      component.passThroughData = self.data.passThroughData || options.passThroughData || null
 
-        # Move any top-level keys outside of `context` into `context`.
-        if Match.test(parentData.context, Object)
-          for key, val of parentData when key isnt 'context'
-            parentData.context[key] = val
+      # If explicitly standalone, data is not provided to parent form block.
+      if self.data.standalone || options.providesData is false
+        component.providesData = false
 
-        # Give us our new parent data
-        parentData = parentData.context
+      # If not standalone, and if provides data, set up parent data context locally.
+      else
+        component.providesData = options.providesData
+
+        # Handle if this is a sub-element (Issue #31).
+
+        # Traverse contexts until we find a parent form block, if one exists within 5 levels.
+        while !_.has(Template.parentData(formBlockLevel), 'context') && formBlockLevel < 5
+          formBlockLevel++
+
+        # If the form block isn't directly outside the element's scope--
+        # We're inside another element.
+        if formBlockLevel > 1
+          parentElement = Template.parentData(formBlockLevel - 1)
+
+          # Adopt parent element's field. We'll run `ensureElementValue` below to sync with data.
+          component.field = parentElement.field
+
+        # Get parent form block if it exists, one more level up.
+        parentData = Template.parentData(formBlockLevel)
+
+        # Support a single context object (Issue #15).
+        if parentData && parentData.context?
+
+          # Move any top-level keys outside of `context` into `context`.
+          if Match.test(parentData.context, Object)
+            for key, val of parentData when key isnt 'context'
+              parentData.context[key] = val
+
+          # Final change to `parentData`--also add to `component` for `rendered` access.
+          parentData = component.parentData = parentData.context
 
       # Run within a form block or standalone
       # -------------------------------------
 
-      component.isChild = parentData && parentData.submit?
+      # Add `isChild` to make it easier to know whether a form block is involved.
+      if self.data.standalone is true
+        component.isChild = false
+      else
+        component.isChild = parentData && parentData.submit?
 
       if component.isChild
+
+        # If this element has a custom selector, register that with the form block.
+        # This is for the `els` argument in the action function.
+        if options.validationSelector isnt '.reactive-element'
+          parentData.addCustomSelector(options.validationSelector)
 
         # Localize parent states and schema (specific items appropriate for use in elements).
         for key in ['submit', 'submitted', 'loading', 'success', 'schema', 'schemaContext']
@@ -401,8 +452,12 @@
       # States
       # ------
 
-      component.valid = new Blaze.ReactiveVar(true)
-      component.changed = new Blaze.ReactiveVar(false)
+      component.valid = new ReactiveVar(true)
+      component.changed = new ReactiveVar(false)
+
+      component.schemaContext? && self.autorun ->
+        valid = component.schemaContext.keyIsInvalid(component.field)
+        component.valid.set(valid)
 
       # Validate a value for this field.
       # --------------------------------
@@ -425,9 +480,8 @@
       # Track this element's latest validated value, starting with init data
 
       # Get reactive value and deps from form block if available.
-      ensureValue = parentData?.ensureElementValue?(component.field, initValue)
-
-      component.value = ensureValue && ensureValue.value || new Blaze.ReactiveVar(initValue)
+      ensureValue = component.field && parentData?.ensureElementValue?(component.field, initValue)
+      component.value = ensureValue && ensureValue.value || new ReactiveVar(initValue)
       component.valueDep = ensureValue && ensureValue.dep || new Tracker.Dependency
 
       # Save a value--usually after successful validation
@@ -440,33 +494,31 @@
           component.value.set(value)
           fromUserEvent && component.changed.set(true)
 
-        # Save to a parent form block if possible ()
+        # Save to a parent form block if possible
         if component.isChild && parentData.setValidatedValue?
           parentData.setValidatedValue(component.field, value, fromUserEvent)
 
       # Automatically validate every time the value changes.
       # Because we check `options.providesData` this should only fire once per element.
       # Also, this will only run if we're using SimpleSchema.
-      options.providesData && component.schemaContext? && self.autorun ->
+      component.providesData && component.schemaContext? && self.autorun ->
         value = component.value.get()
+
         Tracker.nonreactive ->
 
           # Use `validateValue` to skip dealing with the DOM (this is below).
           isValid = validateValue(value)
 
           # Add validated value to parent form block's `validatedValues`
-
-          # XXX Note THIS IS WHERE WE SHOULD SEND DATA TO FORM BLOCK CONTEXT.
-          # But WE CAN'T DO IT HERE BECAUSE WE DON'T KNOW IF IT'S FROM A USER EVENT.
-
+          #
+          # XXX We could send data to the form block's context if we knew whether the change
+          # came from a user event. Unfortunately, we can't tell here, so we need to send it
+          # up before it gets validated.
+          #
           # This doesn't actually cause any problems, but it's not ideal--
           # Invalid data should never make its way to the form data context.
-
+          #
           # Need to possibly update how we handle `changed` event.
-
-          # For now, we're adding invalid data directly into both the reactive element
-          # data context and the non-reactive form data context and depending on this
-          # autorun function to do validation afterwards.
 
       # Support remote changes (Issue #40)
       # ----------------------------------
@@ -479,7 +531,7 @@
       # `templates:forms` can be configured to support all three of the above options.
 
       # Track whether the remote value has changed (use this to show a message in the UI).
-      component.remoteValueChange = new Blaze.ReactiveVar(false)
+      component.remoteValueChange = new ReactiveVar(false)
 
       # Ignore the presence of remote changes to the current form's data.
       component.ignoreValueChange = ->
@@ -492,11 +544,11 @@
         component.valueDep.changed()
 
       # Store remote data changes without replacing the local value.
-      component.newRemoteValue = new Blaze.ReactiveVar(initValue)
+      component.newRemoteValue = new ReactiveVar(initValue)
 
       # Track remote data changes reactively.
       self.autorun ->
-        data = component.isChild && Template.parentData(1) || Template.currentData()
+        data = component.isChild && Template.parentData(formBlockLevel) || Template.currentData()
 
         if data?.data?[component.field]?
           fieldValue = data.data[component.field]
@@ -507,10 +559,17 @@
             # If the remote value is different from what's in initial data, set `newRemoteValue`.
             # Otherwise, leave it--the user's edits are still just as valid.
             if !_.isEqual(component.value.get(), fieldValue)
-              component.newRemoteValue.set(fieldValue)
 
-              # Let us know there's been a remote change.
-              component.remoteValueChange.set(true)
+              # Allow for remote data changes to pass through without user action.
+              # This is important for the experience of some components.
+              if component.passThroughData
+                setValue(fieldValue)
+                component.valueDep.changed()
+              else
+
+                # Set value and let us know there's been a remote change.
+                component.newRemoteValue.set(fieldValue)
+                component.remoteValueChange.set(true)
 
       # Callback for `validationEvent` trigger
       # --------------------------------------
@@ -527,18 +586,29 @@
         cln = component.schema.clean(obj, options)
         return cln[component.field]
 
-      component.validateElement = (fromUserEvent) ->
-        el = self.find('.reactive-element')
+      component.validateElement = (el, fromUserEvent) ->
 
         # Can't pass in `clean` method if user isn't using SimpleSchema.
         cleanValue = component.schemaContext? && cleanValue || (arg) ->
           return arg
 
-        # Get value from DOM element and alter value to avoid validation errors.
-        val = getValidationValue(el, cleanValue, self)
+        # Check `instanceof Stopper` to make sure we don't mistake stops for user input.
+        Stopper = ->
 
-        # Set value.
-        setValue(val, fromUserEvent)
+        # Create a useful context to bind `getValidationValue` to.
+        ctx =
+          stop: new Stopper()
+          validate: (val) ->
+            setValue(val, fromUserEvent)
+            return this.stop # Prevents automatic validator from running (see below).
+
+        # Call `getValidationValue` bound to a context with `validate` method (Issue #36).
+        val = getValidationValue.call(ctx, el, cleanValue, self)
+
+        # You can return `this.stop` if you're running manual validation.
+        # Returning the result of `this.validate(val)` does this automatically, too.
+        unless val instanceof Stopper
+          setValue(val, fromUserEvent)
 
       # Add component to custom namespace (Issue #21).
       ext = {}
@@ -557,13 +627,24 @@
   elements.renderedFactory = (options) ->
 
     return ->
+      self = this
 
       # Only run initial validation if this element provides data (Issue #42).
-      if options.providesData
-        component = this[MODULE_NAMESPACE]
-        component.validateElement()
+      component = self[MODULE_NAMESPACE]
 
-      options.rendered && options.rendered.call(this)
+      # Find matching element(s) using the proper selector.
+      el = self.findAll(options.validationSelector)
+
+      if component.providesData
+
+        # Validate any initial data if this element provides data to schema context.
+        el && component.validateElement(el, false)
+
+      # Send reset function to form block so it's called with proper context and element(s).
+      options.reset && component.parentData?.addResetFunction? ->
+        options.reset.call(self, el)
+
+      options.rendered && options.rendered.call(self)
 
 
   # Template helpers
@@ -693,8 +774,11 @@
   createElement = (obj) ->
     check obj, Match.ObjectIncluding
       template: String
-      validationEvent: Match.Optional(String)
+      validationEvent: Match.Optional(Match.OneOf(String, [String]))
       validationValue: Match.Optional(Function)
+      validationSelector: Match.Optional(String)
+      reset: Match.Optional(Function)
+      passThroughData: Match.Optional(Boolean)
 
       # Allow normal callbacks for adding custom data, etc. (Issue #20).
       created: Match.Optional(Function)
@@ -710,13 +794,36 @@
         # Use this to reduce demands from non-input (nested) elements (Issue #42).
         providesData: false
 
-      for key in ['validationValue', 'created', 'rendered', 'destroyed']
+      for key in [
+        'validationValue'
+        'validationSelector'
+        'reset'
+        'passThroughData'
+        'created'
+        'rendered'
+        'destroyed'
+      ]
         if _.has(obj, key)
           options[key] = obj[key]
 
       if _.has(obj, 'validationEvent') # (Issue #33)
-        evt[obj.validationEvent + ' .reactive-element'] = (e, t) ->
-          t[MODULE_NAMESPACE].validateElement(true) # Flag `fromUserEvent` as true.
+
+        # Compile selector in `options`. Allow array for `validationEvent` (Issue #52).
+        # -----------------------------------------------------------------------------
+
+        # Use default selector `.reactive-element` if custom selector isn't available.
+        options.validationSelector = options.validationSelector || '.reactive-element'
+
+        # Map all events to selector and return a single string.
+        selectorWithEvents = Match.test(obj.validationEvent, String) &&
+          "#{obj.validationEvent} #{options.validationSelector}" ||
+          _.map(obj.validationEvent, (e) -> return "#{e} #{validationSelector}").join(', ')
+
+        # Create event handler to pass value through validation.
+        evt[selectorWithEvents] = (e, t) ->
+
+          # Flag `fromUserEvent` as true.
+          t[MODULE_NAMESPACE].validateElement(e.currentTarget, true)
 
         # It has `validationEvent`, so assume it tracks events and inputs data.
         options.providesData = true
@@ -757,15 +864,18 @@
       if obj.submitType is 'normal'
         evt['submit form'] = (e, t) ->
           e.preventDefault()
+          e.stopPropagation() # Allow nested form blocks.
           t[MODULE_NAMESPACE].submit()
 
       else if obj.submitType is 'enterKey'
         evt['submit form'] = (e, t) ->
           e.preventDefault()
+          e.stopPropagation()
 
         evt['keypress form'] = (e, t) ->
           if e.which is 13
             e.preventDefault()
+            e.stopPropagation()
             t[MODULE_NAMESPACE].submit()
 
       template.created = forms.createdFactory(options)

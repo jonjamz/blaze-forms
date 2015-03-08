@@ -78,7 +78,8 @@ Template['testForm'].helpers({
       console.log("[forms] HTML elements with `.reactive-element` class!", els);
       console.log("[forms] Callbacks!", callbacks);
       console.log("[forms] Changed fields!", changed);
-      callbacks.success();
+      callbacks.success(); // Display success message.
+      callbacks.reset();   // Run each Element's custom `reset` function to clear the form.
     };
   }
 });
@@ -91,9 +92,10 @@ The **action function** runs when the form is submitted. It takes three params, 
   * You may use this to retrieve data and save it to the database.
   * You can also use this to clear values after the form has successfully been submitted.
 * `callbacks`
-  * This contains two methods to trigger the form's state.
+  * This contains two methods to trigger the form's state, and one method for resetting the form.
   * Running `callbacks.success()` sets `success`.
   * Running `callbacks.failed()`  sets `failed`.
+  * Running `callbacks.reset()`   runs the custom reset function for each Element in the Form Block.
   * The form's `{{loading}}` state (see below) will run from the time you submit to the time you call one of these.
 * `changed`
   * If you passed in initial data, this contains an object with only the fields that have changed.
@@ -145,7 +147,10 @@ ReactiveForms.createFormBlock({
 
 ReactiveForms.createElement({
   template: 'basicInput',
-  validationEvent: 'keyup'
+  validationEvent: 'keyup',
+  reset: function (el) {
+    $(el).val('');
+  }
 });
 ```
 
@@ -168,7 +173,7 @@ Create a ReactiveForms Element from a compatible template.
 ```javascript
 ReactiveForms.createElement({
   template: 'basicInput',
-  validationEvent: 'keyup',
+  validationEvent: 'keyup', // Can also be an array of events as of 1.13.0!
   validationValue: function (el, clean, template) {
     // This is an optional method that lets you hook into the validation event
     // and return a custom value to validate with.
@@ -181,16 +186,29 @@ ReactiveForms.createElement({
     console.log('Specifying my own validation value!');
     value = $(el).val();
     return clean(value, {removeEmptyStrings: false});
+  },
+  reset: function (el) {
+    $(el).val('');
   }
 });
 ```
+
+Other available options for `createElement`:
+
+* `validationSelector` allows specifying a custom selector for the element instead of `.reactive-element`.
+* `passThroughData` relates to how the element handles reactive initial data. If this is set to `true`,
+  changes in the underlying data will be accepted automatically without informing the user.
+  * This is useful when an element offers a set of options that you'd like to keep transparently
+    up-to-date in real-time.
+* `created`, `rendered`, and `destroyed` callbacks--these are safe equivalents to the normal Meteor
+  template callbacks.
 
 #### Element template requirements
 
 * Template must contain one *HTML element*, for example `<input>`.
 * The HTML element must:
-  * Have the `reactive-element` class.
-  * Support the `validationEvent` type you specify in `createElement` options.
+  * Have the `reactive-element` class (or a custom selector you specify using `validationSelector`).
+  * Support the `validationEvent` type(s) you specify in `createElement` options.
 
 > You can also put the `reactive-element` class on a container in the Element to delegate the event.
 
@@ -335,7 +353,7 @@ Here are examples of two types of possible nested elements:
     <label>{{label}}</label>
     <br>
     <!-- Make sure to pass `field` -->
-    {{> UI.contentBlock field=field}}
+    {{> UI.contentBlock}}
     <!-- Show error if submitted but not successful -->
     {{#if submitted}}
       {{#if errorMessage}}<p class="error-message">{{errorMessage}}</p>{{/if}}
@@ -355,15 +373,15 @@ Here are examples of two types of possible nested elements:
       <p>Success! Form submitted.</p>
     {{else}}
       {{#myElementContainer field='firstName'}}
-        {{> myInputElement}}
+        {{> myInputElement field='firstName'}}
       {{/myElementContainer}}
 
       {{#myElementContainer field='lastName'}}
-        {{> myInputElement}}
+        {{> myInputElement field='lastName'}}
       {{/myElementContainer}}
 
       {{#myElementContainer field='phoneNumber'}}
-        {{> myInputElement}}
+        {{> myInputElement field='phoneNumber'}}
       {{/myElementContainer}}
     {{/if}}
     <hr>
@@ -378,6 +396,8 @@ Of course the above component templates need to be registered with `ReactiveForm
 
 > When running standalone (without being wrapped in a Form Block) you'll put the schema on the
 Element's template invocation. You can also override the other form-level helpers on Elements this way.
+
+> To force an element to run in standalone mode, you can specify `standalone=true` in the template's invocation.
 
 > Be sure to add the reactive-element class to your Element so that it's selected when the form action is run.
 
@@ -438,11 +458,11 @@ Here's an example of a ReactiveForms Form Block template.
         {{/if}}
 
         {{#if failed}}
-          There was a problem submitting the form!
+          <strong>{{#if failedMessage}}{{failedMessage}}{{else}}Unable to submit the form.{{/if}}</strong>
         {{/if}}
 
         {{#if success}}
-          Success! Form submitted (to nowhere)
+          <strong>{{#if successMessage}}{{successMessage}}{{else}}Saved!{{/if}}</strong>
         {{/if}}
       </span>
     </p>
@@ -492,9 +512,13 @@ Form Block templates have access to the following helpers:
   * Use this to show a spinner or other loading indicator.
 * `{{failed}}`
   * This is *true* if the last attempt to run the form action failed.
+* `{{failedMessage}}`
+  * This would display "1 item failed!" in the case of `callbacks.failed('1 item failed!')`.
 * `{{success}}`
   * This is *true* if the last attempt to run the form action was a success.
   * Use this to hide Elements or otherwise end the form's session.
+* `{{successMessage}}`
+  * This would display "Thank you!" in the case of `callbacks.success('Thank you!')`.
 
 
 #### Highlights

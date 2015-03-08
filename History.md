@@ -1,3 +1,30 @@
+1.13.0
+======
+
+* Allow element validation to be immediately cancelled and/or called manually in async fashion with
+  `return this.stop` and `this.validate(val)`.
+* Improve support for parent/child elements.
+  * Elements now check their parent template context (up to 5 levels) to determine where the
+    form block context is, rather than assuming it's one level up. When the parent is an element,
+    the sub-element will take the parent element's `field` as its own.
+  * Elements now support `standalone=true` explicit standalone mode in the template invocation.
+  * `createElement` now supports `passThroughData` option--elements with this option set `true` will
+    accept remote data changes without waiting for a user's action. This is useful for elements
+    receiving data from a join (for example, a checklist of related documents).
+* Switch from Blaze.ReactiveVar to non-namespaced ReactiveVar and add dependency.
+* Address issues #50, #51, #52, and #53.
+  * Allow for custom success and failed messages:
+    * Messages can be easily added in callbacks, like `callbacks.success('...message...')`.
+    * `failedMessage` and `successMessage` template helpers now exist for form blocks.
+  * Add official support for resetting a form.
+    * Elements can now specify a `reset` method in `createElement` config.
+    * A `callbacks.reset()` clears all element data using the `reset` methods, and clears
+      form data context in a form block.
+  * Add support for an array of events in `validationEvent`.
+  * `{{valid}}` reactivity should now register `changed` when the element's field is invalidated in
+    SimpleSchema from the outside.
+
+
 1.12.5
 ======
 
