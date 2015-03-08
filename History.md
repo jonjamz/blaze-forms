@@ -1,3 +1,8 @@
+1.13.2
+======
+
+* Fix regression where `{{valid}}` was incorrectly set.
+
 1.13.1
 ======
 

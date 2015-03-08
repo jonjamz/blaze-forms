@@ -456,8 +456,8 @@
       component.changed = new ReactiveVar(false)
 
       component.schemaContext? && self.autorun ->
-        valid = component.schemaContext.keyIsInvalid(component.field)
-        component.valid.set(valid)
+        invalid = component.schemaContext.keyIsInvalid(component.field)
+        component.valid.set(!invalid)
 
       # Validate a value for this field.
       # --------------------------------
