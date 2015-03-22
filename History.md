@@ -1,3 +1,16 @@
+1.13.3
+======
+
+* Address issues #51 and #54.
+  * Refactor to fix errors.
+  * Fix `context` helper by adding extra checks.
+  * Fix resetting functionality.
+    * By default, `callbacks.reset()` now clears all states except `success` or `failed` and
+      related messages. This provides a nice default experience for users that doesn't jar
+      them away from the last session without some idea of what happened (the states clear
+      on the next form change automatically).
+    * To clear all states and messages, perform a hard reset with `callbacks.reset(true)`.
+
 1.13.2
 ======
 

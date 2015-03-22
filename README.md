@@ -95,7 +95,10 @@ The **action function** runs when the form is submitted. It takes three params, 
   * This contains two methods to trigger the form's state, and one method for resetting the form.
   * Running `callbacks.success()` sets `success`.
   * Running `callbacks.failed()`  sets `failed`.
-  * Running `callbacks.reset()`   runs the custom reset function for each Element in the Form Block.
+  * Running `callbacks.reset()`   runs the custom reset function for each Element in the Form Block
+    and clears Form Block state except for `success` and `failed` states and related messages.
+    This allows users to see any available feedback even if the form is reset.
+    * To clear all states and messages, use `callbacks.reset(true)`.
   * The form's `{{loading}}` state (see below) will run from the time you submit to the time you call one of these.
 * `changed`
   * If you passed in initial data, this contains an object with only the fields that have changed.

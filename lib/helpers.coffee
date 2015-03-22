@@ -1,5 +1,5 @@
 Template.registerHelper 'context', ->
-  context = Template.instance() && Template.instance().data && Template.instance().data.context
+  context = Template.instance?().data?.context
 
   return {
 
@@ -7,29 +7,38 @@ Template.registerHelper 'context', ->
     # -------------------------------------------------------------
 
     failed: ->
-      return context.failed.get()
+      if context?.failed?.get?
+        return context.failed.get()
 
     success: ->
-      return context.success.get()
+      if context?.success?.get?
+        return context.success.get()
 
     invalidCount: ->
-      return context.schemaContext.invalidKeys().length
+      if context?.schemaContext?.invalidKeys?
+        return context.schemaContext.invalidKeys().length
 
     invalid: ->
-      return context.invalid.get()
+      if context?.invalid?.get?
+        return context.invalid.get()
 
     loading: ->
-      return context.loading.get()
+      if context?.loading?.get?
+        return context.loading.get()
 
     changed: ->
-      return context.changed.get()
+      if context?.changed?.get?
+        return context.changed.get()
 
     unchanged: ->
-      return !context.changed.get()
+      if context?.changed?.get?
+        return !context.changed.get()
 
     submitted: ->
-      return context.submitted.get()
+      if context?.submitted?.get?
+        return context.submitted.get()
 
     unsubmitted: ->
-      return !context.submitted.get()
+      if context?.submitted?.get?
+        return !context.submitted.get()
   }

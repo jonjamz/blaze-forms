@@ -1,4 +1,3 @@
-
 @ReactiveForms = ReactiveForms = do ->
 
 
@@ -83,8 +82,8 @@
         if _.has(data, 'data') && !Match.test data.data, dataTest
           canWarn && console.warn(errorMessages.data)
 
-      # Basic states
-      # ------------
+      # States
+      # ------
       # Set by the submit method below.
 
       component.changed   = new ReactiveVar(false)
@@ -99,11 +98,21 @@
       component.failedMessage  = new ReactiveVar(null)
 
       # Ensure states are mutually exclusive--set with these methods only.
-      setState = (activeState, message) ->
+      setExclusive = (activeState, message) ->
         for state in ['success', 'failed', 'loading', 'invalid']
           component[state].set(state is activeState)
         if message && component[activeState + 'Message']
           component[activeState + 'Message'].set(message)
+
+      resetStates = (hard) ->
+        component.changed.set(false)
+        component.submitted.set(false)
+        component.invalid.set(false)
+        component.loading.set(false)
+
+        if hard
+          component.failed.set(false)
+          component.success.set(false)
 
       # Schema
       # ------
@@ -150,8 +159,18 @@
       # When initial data is present, keep track of which fields are modified (Issue #11).
       changedValues = self.data.data && {} || undefined
 
+      # Element reactive data
+      # ---------------------
       # When elements are wrapped in a form block, store the element's reactive data here.
+
+      # Value format is `fieldName: { value: new ReactiveVar(), dep: new Tracker.Dependency }`
       elementValues = {}
+
+      # Reactively reset all stored element values.
+      resetElementValues = ->
+        for field, obj of elementValues
+          obj.value.set(null)
+          obj.dep.changed()
 
       # Set new reactive value in `elementValues` or get the existing property.
       # Also provide a dependency for element templates to track.
@@ -188,27 +207,28 @@
 
       # Reset
       # -----
-      # Keeping track of reset functions without tying them to specific fields allows there
-      # to be several elements for the same field. Granted these will fight for a single
-      # property in the form data context, but regardless, both will be cleared.
-      #
-      # When sending reset functions, make sure they use the element's template context, not
-      # some general context. Keep it scope-limited.
 
+      # Store all the custom reset functions for elements.
       resetFunctions = []
-
-      resetForm = ->
-        for func in resetFunctions
-          func()
-        validatedValues = {} # Reset form data context.
-        setState(false) # Reset all form states to false.
-
-        # Clear all old messages.
-        component.successMessage.set(null)
-        component.failedMessage.set(null)
 
       component.addResetFunction = (func) ->
         resetFunctions.push(func)
+
+      # Reset form.
+      resetForm = (hard) ->
+
+        # Always clear values in DOM and reset form/element data contexts.
+        for func in resetFunctions
+          func()
+        validatedValues = {}
+        resetElementValues()
+
+        # Reset all form states to init values (false).
+        # For hard reset, kill the last success/failed states too.
+        resetStates(hard)
+        if hard
+          component.successMessage.set(null)
+          component.failedMessage.set(null)
 
       # Selectors
       # ---------
@@ -231,19 +251,19 @@
         # If any values are bad, return without running the action function.
         if _.has(component, 'schemaContext')
           if !!component.schemaContext.invalidKeys().length
-            setState('invalid')
+            setExclusive('invalid')
             return
 
         # Invoke loading state until action function returns failed or success.
-        setState('loading')
+        setExclusive('loading')
 
         # Send form elements and callbacks to action function.
         # The action function is bound to validatedValues.
         formElements = self.findAll(elementSelectors.join(', '))
         callbacks =
-          success: (message) -> setState('success', message)
-          failed:  (message) -> setState('failed',  message)
-          reset:             -> resetForm()
+          success: (message) -> setExclusive('success', message)
+          failed:  (message) -> setExclusive('failed',  message)
+          reset:      (hard) -> resetForm(hard) # A hard reset clears success/failed state.
 
         self.data.action.call(validatedValues, formElements, callbacks, changedValues)
 
@@ -368,86 +388,86 @@
     return ->
 
       self = this
-      component = {}
-      initValue = null
-      formBlockLevel = 1
 
+      # Config
+      # ------
+
+      component =
+
+        # A field to connect this element with in the schema.
+        field: self.data.field || null
+
+        # Initial value from passed-in data in the parent form block.
+        initValue: null
+
+        # Allow for remote data changes to pass through silently.
+        passThroughData: self.data.passThroughData || options.passThroughData || false
+
+        # Element contributes to parent form block's data context.
+        providesData: !self.data.standalone && options.providesData
+
+        # Context passed from parent form block, if exists.
+        parentData: null
+
+        # Element is inside a form block.
+        isChild: false
+
+        # Contexts to traverse until form block context.
+        distance: 0
+
+      # Try setting up with a parent element/form block if not explicitly standalone.
+      unless self.data.standalone
+
+        # Traverse contexts to determine if it's a child element or sub-element.
+        while component.distance < 6 && !component.isChild
+
+          # Start at 1
+          component.distance++
+
+          data = Template.parentData(component.distance)
+
+          # Child element in this context?
+          if data && _.has(data, 'context')
+            component.isChild = true
+
+            # Move any top-level keys outside of `context` into `context`.
+            for key, val of data when key isnt 'context'
+              data.context[key] = val
+
+            # Add `context` key as `parentData`.
+            component.parentData = data.context
+
+            # Localize parent states and schema (specific items appropriate for use in elements).
+            for key in ['submit', 'submitted', 'loading', 'success', 'schema', 'schemaContext']
+              component[key] = component.parentData[key] || null
+
+          # Sub-element in this context? Take parent's field.
+          else if data && _.has(data, 'field')
+            component.field = data.field
 
       # Basic setup
       # -----------
 
-      component.field = self.data.field || null
-
-      # Allow skipping a prompt when underlying data changes.
-      component.passThroughData = self.data.passThroughData || options.passThroughData || null
-
-      # If explicitly standalone, data is not provided to parent form block.
-      if self.data.standalone || options.providesData is false
-        component.providesData = false
-
-      # If not standalone, and if provides data, set up parent data context locally.
-      else
-        component.providesData = options.providesData
-
-        # Handle if this is a sub-element (Issue #31).
-
-        # Traverse contexts until we find a parent form block, if one exists within 5 levels.
-        while !_.has(Template.parentData(formBlockLevel), 'context') && formBlockLevel < 5
-          formBlockLevel++
-
-        # If the form block isn't directly outside the element's scope--
-        # We're inside another element.
-        if formBlockLevel > 1
-          parentElement = Template.parentData(formBlockLevel - 1)
-
-          # Adopt parent element's field. We'll run `ensureElementValue` below to sync with data.
-          component.field = parentElement.field
-
-        # Get parent form block if it exists, one more level up.
-        parentData = Template.parentData(formBlockLevel)
-
-        # Support a single context object (Issue #15).
-        if parentData && parentData.context?
-
-          # Move any top-level keys outside of `context` into `context`.
-          if Match.test(parentData.context, Object)
-            for key, val of parentData when key isnt 'context'
-              parentData.context[key] = val
-
-          # Final change to `parentData`--also add to `component` for `rendered` access.
-          parentData = component.parentData = parentData.context
-
-      # Run within a form block or standalone
-      # -------------------------------------
-
-      # Add `isChild` to make it easier to know whether a form block is involved.
-      if self.data.standalone is true
-        component.isChild = false
-      else
-        component.isChild = parentData && parentData.submit?
-
+      # Ok, now we know if it's actually a child.
       if component.isChild
 
         # If this element has a custom selector, register that with the form block.
         # This is for the `els` argument in the action function.
-        if options.validationSelector isnt '.reactive-element'
-          parentData.addCustomSelector(options.validationSelector)
+        if component.providesData && options.validationSelector isnt '.reactive-element'
+          component.parentData.addCustomSelector(options.validationSelector)
 
-        # Localize parent states and schema (specific items appropriate for use in elements).
-        for key in ['submit', 'submitted', 'loading', 'success', 'schema', 'schemaContext']
-          component[key] = parentData[key] || null
+        component.schema = component.parentData.schema
+        component.schemaContext = component.parentData.schemaContext
 
-        # Set local initial value if provided by the parent.
-        if parentData.data && _.has(parentData.data, component.field)
-          initValue = parentData.data[component.field]
+        if component.parentData.data && _.has(component.parentData.data, component.field)
+          component.initValue = component.parentData.data[component.field]
 
-      # But if not, run standalone.
       else
         component.schema = self.data.schema || null
         component.schemaContext = self.data.schema && self.data.schema.newContext() || null
 
         if self.data.data && _.has(self.data.data, component.field)
-          initValue = self.data.data[component.field]
+          component.initValue = self.data.data[component.field]
 
       # States
       # ------
@@ -459,8 +479,8 @@
         invalid = component.schemaContext.keyIsInvalid(component.field)
         component.valid.set(!invalid)
 
-      # Validate a value for this field.
-      # --------------------------------
+      # Validation
+      # ----------
 
       validateValue = (val) ->
 
@@ -480,8 +500,9 @@
       # Track this element's latest validated value, starting with init data
 
       # Get reactive value and deps from form block if available.
-      ensureValue = component.field && parentData?.ensureElementValue?(component.field, initValue)
-      component.value = ensureValue && ensureValue.value || new ReactiveVar(initValue)
+      ensureValue = component.field &&
+        component.parentData?.ensureElementValue?(component.field, component.initValue)
+      component.value = ensureValue && ensureValue.value || new ReactiveVar(component.initValue)
       component.valueDep = ensureValue && ensureValue.dep || new Tracker.Dependency
 
       # Save a value--usually after successful validation
@@ -495,8 +516,8 @@
           fromUserEvent && component.changed.set(true)
 
         # Save to a parent form block if possible
-        if component.isChild && parentData.setValidatedValue?
-          parentData.setValidatedValue(component.field, value, fromUserEvent)
+        if component.isChild && component.parentData.setValidatedValue?
+          component.parentData.setValidatedValue(component.field, value, fromUserEvent)
 
       # Automatically validate every time the value changes.
       # Because we check `options.providesData` this should only fire once per element.
@@ -544,11 +565,12 @@
         component.valueDep.changed()
 
       # Store remote data changes without replacing the local value.
-      component.newRemoteValue = new ReactiveVar(initValue)
+      component.newRemoteValue = new ReactiveVar(component.initValue)
 
       # Track remote data changes reactively.
       self.autorun ->
-        data = component.isChild && Template.parentData(formBlockLevel) || Template.currentData()
+        data = component.isChild && Template.parentData(component.distance) ||
+          Template.currentData()
 
         if data?.data?[component.field]?
           fieldValue = data.data[component.field]
