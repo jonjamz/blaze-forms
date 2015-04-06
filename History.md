@@ -1,3 +1,25 @@
+1.14.0
+======
+
+* Major update that addresses issues #28, #55, and #56.
+  * Nested schemas are now supported.
+  * An `onDataChange` hook can now be passed into a form block via a template helper.
+    * This has access to several useful methods that allow fine-grained control over what
+      happens when reactive initial data is changed.
+      * `this.reset()` calls the same method as `callbacks.reset()` in the action function.
+      * `this.refresh()` will cause every Element to refresh itself with the new initial data.
+        If the user made changes to an Element, that Element's value won't be updated in the
+        DOM, but it will have a new *original* value.
+      * `this.changed()` causes the form to take on the `changed` state (as if a user had
+        made changes to the form).
+  * The `changed` argument to the action function now only contains fields that have actually
+    changed from the initial data (compared to before, where any user-modified fields would
+    exist).
+  * Added new template helpers for Elements, which should make dealing with initial data easier.
+    * `{{originalValue}}` shows the *original* value of this field where initial data is present.
+    * `{{uniqueValue}}` is a boolean for whether the current value of a field is unique from
+      the original value.
+
 1.13.3
 ======
 

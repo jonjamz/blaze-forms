@@ -16,11 +16,71 @@
 
   canWarn = console?.warn?
 
-  # Log deprecation warning and offer alternative
+  # Use `new Stopper()` in place of returning `undefined` or `null` explicitly.
+  #
+  # This is compatible with reduce and doesn't get mistaken when users want to actually return
+  # these values from Elements.
+  Stopper = ->
+    return
+
+  # Log deprecation warning and offer alternative.
   deprecatedLogger = (item, alternative) ->
     if canWarn
       console.warn("[forms] `#{item}` is deprecated. Use `#{alternative}` instead.
         See documentation for more information.")
+
+  # Test for object, not limited to just plain objects. (Issue #9, #34)
+  isObject = (x) ->
+    return _.isObject(x) && !_.isArray(x) && !_.isFunction(x)
+
+
+  # Nested object support
+  # ---------------------
+  # Allow package to work with dot notation (Issue #28).
+
+  # Convert objects from dot notation to nested objects.
+  dotNotationToObject = (key, val) ->
+    if !key then return
+    keys = key.split('.')
+    return _.reduceRight keys, (memo, key) ->
+      obj = {}
+      obj[key] = memo
+      return obj
+    , val
+
+  # Get value from object using dot notation.
+  dotNotationToValue = (obj, key) ->
+    if !obj || !key then return
+    keys = key.split('.')
+    val = _.reduce keys, (memo, key) ->
+      if _.has(memo, key)
+        return memo[key]
+      else
+        return new Stopper()
+    , obj
+    unless val instanceof Stopper
+      return val
+
+  # Remove all possible branches for a field using dot notation.
+  # Uses `Meteor._delete` after compiling args into a single array for `apply`.
+  # https://github.com/meteor/meteor/blob/50e6d3143db8fc6e1fc3fb74da74b40c8dc7f3a4/packages/meteor/helpers.js#L47
+  deleteByDotNotation = (obj, key) ->
+    if !obj || !key then return
+    args = [obj]
+    args = args.concat(key.split('.'))
+    Meteor._delete.apply(this, args)
+    return args[0]
+
+  # Used to extend form data context with a nested object for a field.
+  # Deeper nesting in the second object will overwrite conflicting values in the first--
+  # for example, `{id: {name: 'Jon'}}` will be overwritten by `{id: {name: {first: 'Jon'}}}`
+  deepExtendObject = (first, second) ->
+    for own prop of second
+      if isObject(first[prop]) && _.has(first, prop)
+        deepExtendObject(first[prop], second[prop])
+      else
+        first[prop] = second[prop]
+    return first
 
 
 
@@ -47,6 +107,7 @@
       self = this
       component = {}
 
+
       # Validation
       # ----------
       # Validate passed-in data.
@@ -62,9 +123,11 @@
         data:   "[forms] The `data` field in a Form Block is optional, but if it exists, it
                  must either be an object or a falsey value."
 
-      self.autorun ->
+        change: "[forms] The `onDataChange` hook is optional, but if it exists, it must be
+                 a function."
 
-        # Track reactive changes to data and re-validate.
+      # Track reactive changes to data and re-validate.
+      self.autorun ->
         data = Template.currentData()
 
         # Schema is optional (Issue #27).
@@ -77,10 +140,15 @@
 
         # Initial data is optional.
         dataTest = Match.Optional Match.Where (x) ->
-          return !x || _.isObject(x) && !_.isArray(x) && !_.isFunction(x) # (Issue #9, #34)
+          return !x || isObject(x)
 
         if _.has(data, 'data') && !Match.test data.data, dataTest
           canWarn && console.warn(errorMessages.data)
+
+        # Change hook is optional.
+        if _.has(data, 'onDataChange') && !Match.test data.onDataChange, Function
+          canWarn && console.warn(errorMessages.change)
+
 
       # States
       # ------
@@ -97,12 +165,24 @@
       component.successMessage = new ReactiveVar(null)
       component.failedMessage  = new ReactiveVar(null)
 
-      # Ensure states are mutually exclusive--set with these methods only.
+      # Ensure certain states are mutually exclusive--set with these methods only.
       setExclusive = (activeState, message) ->
         for state in ['success', 'failed', 'loading', 'invalid']
           component[state].set(state is activeState)
         if message && component[activeState + 'Message']
           component[activeState + 'Message'].set(message)
+
+      # This state is a special case.
+      # As `success` represents the end of a form session, a subsequent `change` should
+      # initiate a new session, if the UI is still editable.
+      setChanged = ->
+        component.changed.set(true)
+
+        # If `success` state is active, disable it and `submitted` to refresh the session.
+        # Don't let `changed` affect `submitted` except for when `success` is true.
+        if component.success.get() is true
+          component.success.set(false)
+          component.submitted.set(false)
 
       resetStates = (hard) ->
         component.changed.set(false)
@@ -114,61 +194,53 @@
           component.failed.set(false)
           component.success.set(false)
 
+
       # Schema
       # ------
       # Set schema if exists (optional).
 
       if self.data.schema && self.data.schema.newContext
-        component.schemaContext = _.extend(self.data.schema.newContext(),
-          {data: self.data.data}) # (Issue #4)
+        component.schemaContext = self.data.schema.newContext()
 
       # When a user fixes the invalid fields, clear invalid state
       self.autorun ->
         if _.has(component, 'schemaContext')
           !component.schemaContext.invalidKeys().length && component.invalid.set(false)
 
-      # Changed state--a unique state
-      # -----------------------------
-      # As `success` represents the end of a form session, a subsequent `change` should
-      # initiate a new session, if the UI is still editable.
-      setChanged = ->
-        component.changed.set(true)
 
-        # Add non-referenced data onto the schema context for validation (Issue #4).
-        if _.has(component, 'schemaContext')
-          component.schemaContext.data = _.extend({}, validatedValues)
+      # Form field data
+      # ---------------
 
-        # If `success` state is active, disable it and `submitted` to refresh the session.
-        # Don't let `changed` affect `submitted` except for when `success` is true.
-        if component.success.get() is true
-          component.success.set(false)
-          component.submitted.set(false)
-
-      # Form data context
-      # -----------------
-      # Store validated element values as local data (can't submit invalid data anyway).
-
+      # Full data (non-reactive).
+      #
+      # Store all validated element values at the form-level.
+      # Note: we are now storing data here before validation, so this is a bit of a misnomer.
+      # However, when a schema is present, the form still can't be submitted with invalid data.
       validatedValues = {}
 
-      # Add `_id` if present, adapting to reactive data changes (Issue #38).
-      self.autorun ->
-        data = Template.currentData()
-        if data.data && _.has(data.data, '_id')
-          validatedValues._id = data.data._id
-
-      # When initial data is present, keep track of which fields are modified (Issue #11).
+      # Changed data (non-reactive).
+      #
+      # When initial data is present, store only changed data here (useful for updates--Issue #11).
       changedValues = self.data.data && {} || undefined
 
-      # Element reactive data
-      # ---------------------
-      # When elements are wrapped in a form block, store the element's reactive data here.
-
-      # Value format is `fieldName: { value: new ReactiveVar(), dep: new Tracker.Dependency }`
+      # Individual element data (reactive).
+      #
+      # Element values consist of the following:
+      #
+      # `fieldName: {
+      #   original: new ReactiveVar(value), // Used to track changes against initial data.
+      #   value: new ReactiveVar(value),    // The current stored value.
+      #   dep: new Tracker.Dependency,      // Used to show remotely changed data in templates.
+      #   storeMethods: function () { ... } // Used to pass element-level methods to form-level.
+      # }`
+      #
+      # They will also contain any methods passed from elements using `storeMethods`.
       elementValues = {}
 
       # Reactively reset all stored element values.
       resetElementValues = ->
         for field, obj of elementValues
+          obj.original.set(null)
           obj.value.set(null)
           obj.dep.changed()
 
@@ -177,36 +249,65 @@
       component.ensureElementValue = (field, value) ->
         return _.has(elementValues, field) && elementValues[field] ||
           elementValues[field] =
+            original: new ReactiveVar(value)
             value: new ReactiveVar(value)
             dep: new Tracker.Dependency
 
-      # Set validated value in form data context
-      # ----------------------------------------
+            # Here `methods` is an object.
+            storeMethods: (methods) ->
+              for own name, method of methods
+                elementValues[field][name] = method
 
+      # Set values to form field data.
+      # Note: `field` here is a string in dot notation.
       component.setValidatedValue = (field, value, fromUserEvent) ->
+        currentValue    = dotNotationToValue validatedValues, field
+        objectWithValue = dotNotationToObject field, value
+        original        = elementValues[field].original.get()
 
         # First, opt into setting `changed` if this is a unique update.
-        if _.has(validatedValues, field)
-          if !_.isEqual(value, validatedValues[field])
+        unless Match.test(currentValue, undefined)
+          if !_.isEqual(currentValue, value)
 
             # Set value in form data context, optionally set `changedValues`.
-            validatedValues[field] = value
+            validatedValues = deepExtendObject validatedValues, objectWithValue
 
             if fromUserEvent
-              changedValues && changedValues[field] = value
               setChanged()
 
-        # If the field doesn't exist in validatedValues yet, add it.
+              # Deal with the fact that some fields might not exist in initial data.
+              if changedValues
+
+                # Check new value against original and adjust `changedValues` (Issue #56).
+                # XXX: possibly run this on submit instead, or defer it.
+                if !_.isEqual(original, value)
+
+                  # If the value is unique from the original, add to `changedValues`.
+                  changedValues = deepExtendObject changedValues, objectWithValue
+                else
+
+                  # If not, remove this field altogether from `changedValues`.
+                  changedValues = deleteByDotNotation changedValues, field
+
+        # If the field doesn't exist in `validatedValues` yet, add it.
         else
-          validatedValues[field] = value
+          validatedValues = deepExtendObject validatedValues, objectWithValue
 
           # If this was a user-enacted change to the data, set `changed`.
           # Initial data and schema-provided data will not trigger `changed` (Issue #46).
           if fromUserEvent
             setChanged()
 
+            # If there was initial data, but this field wasn't in it, include in `changed`
+            # the first time.
+            if changedValues && Match.test(original, undefined)
+              changedValues = deepExtendObject changedValues, objectWithValue
+
+
       # Reset
       # -----
+      # Clear form field data, or "form data context"; reset states; run all element-level
+      # reset methods (these can be specified in `createElement`).
 
       # Store all the custom reset functions for elements.
       resetFunctions = []
@@ -221,6 +322,7 @@
         for func in resetFunctions
           func()
         validatedValues = {}
+        changedValues = self.data.data && {} || undefined
         resetElementValues()
 
         # Reset all form states to init values (false).
@@ -229,6 +331,56 @@
         if hard
           component.successMessage.set(null)
           component.failedMessage.set(null)
+
+
+      # Initial data
+      # ------------
+
+      initialData = self.data.data && self.data.data || undefined
+
+      # Hook into underlying data changes at the form-level.
+      self.autorun ->
+        data = Template.currentData()
+        if data.data && !_.isEqual(data.data, initialData)
+
+          # Run provided `onDataChange` hook if available (Issue #55).
+          if self.data.onDataChange
+
+            # Add useful methods here (create an issue if you have a request).
+            ctx =
+              reset: resetForm
+
+              # Arguments are optional--`field` accepts dot notation.
+              # If no arguments are passed, all fields will refresh, meaning all elements will
+              # accept any updates to underlying (initial) data.
+              refresh: (field, val) ->
+
+                # Postpone executing this until `newRemoteValue` is set in elements.
+                # This also ensures that `refresh` is behind `reset` when they're both called
+                # in the hook.
+                Tracker.afterFlush ->
+
+                  if field && _.has(elementValues, field)
+                    elementValues[field].refresh(val)
+
+                  else
+                    for own field, methods of elementValues
+                      methods.refresh()
+
+              changed: ->
+                setChanged()
+
+            # Call hook bound to context, passing in old and new data for comparison.
+            self.data.onDataChange.call(ctx, initialData, data.data)
+
+          # Set `initialData` to new value (so it's "old" the next time around).
+          initialData = data.data
+
+          # Add `_id` to form field data if present (Issue #38).
+          # We track this field here because the other fields are tracked reactively in their
+          # respective elements.
+          _.has(data.data, '_id') && validatedValues._id = data.data._id
+
 
       # Selectors
       # ---------
@@ -239,6 +391,7 @@
       component.addCustomSelector = (selector) ->
         unless selector in elementSelectors
           elementSelectors.push(selector)
+
 
       # Submit
       # ------
@@ -284,8 +437,9 @@
 
   forms.helpers =
 
-    # This is all of the below consolidated into one object (Issue #15)
-    # -----------------------------------------------------
+
+    # This gets passed down to elements (Issue #15)
+    # ---------------------------------------------
 
     context: ->
       inst = Template.instance()
@@ -307,8 +461,9 @@
         addCustomSelector: component.addCustomSelector
       }
 
-    # These are used as real helpers
-    # ------------------------------
+
+    # These are real form block helpers
+    # ---------------------------------
 
     failed: ->
       inst = Template.instance()
@@ -389,6 +544,7 @@
 
       self = this
 
+
       # Config
       # ------
 
@@ -421,7 +577,7 @@
         # Traverse contexts to determine if it's a child element or sub-element.
         while component.distance < 6 && !component.isChild
 
-          # Start at 1
+          # Start at 1.
           component.distance++
 
           data = Template.parentData(component.distance)
@@ -445,10 +601,12 @@
           else if data && _.has(data, 'field')
             component.field = data.field
 
+
       # Basic setup
       # -----------
 
       # Ok, now we know if it's actually a child.
+      # Configure schema and get initial value if available, supporting dot notation.
       if component.isChild
 
         # If this element has a custom selector, register that with the form block.
@@ -459,15 +617,16 @@
         component.schema = component.parentData.schema
         component.schemaContext = component.parentData.schemaContext
 
-        if component.parentData.data && _.has(component.parentData.data, component.field)
-          component.initValue = component.parentData.data[component.field]
+        if component.parentData.data
+          component.initValue = dotNotationToValue(component.parentData.data, component.field)
 
       else
         component.schema = self.data.schema || null
         component.schemaContext = self.data.schema && self.data.schema.newContext() || null
 
-        if self.data.data && _.has(self.data.data, component.field)
-          component.initValue = self.data.data[component.field]
+        if self.data.data
+          component.initValue = dotNotationToValue(self.data.data, component.field)
+
 
       # States
       # ------
@@ -479,21 +638,23 @@
         invalid = component.schemaContext.keyIsInvalid(component.field)
         component.valid.set(!invalid)
 
+
       # Validation
       # ----------
 
       validateValue = (val) ->
 
-        # We need an object to validate with--
-        object = _.extend({}, component.schemaContext.data) # (Issue #4)
-        object[component.field] = val
+        # Transform field/value to a (possibly nested) object.
+        object = dotNotationToObject(component.field, val)
 
         # Get true/false for validation (validating against this field only).
         isValid = component.schemaContext.validateOne(object, component.field)
 
         # Set `valid` property to reflect in templates.
         component.valid.set(isValid)
+
         return isValid
+
 
       # Value
       # -----
@@ -502,10 +663,13 @@
       # Get reactive value and deps from form block if available.
       ensureValue = component.field &&
         component.parentData?.ensureElementValue?(component.field, component.initValue)
-      component.value = ensureValue && ensureValue.value || new ReactiveVar(component.initValue)
-      component.valueDep = ensureValue && ensureValue.dep || new Tracker.Dependency
 
-      # Save a value--usually after successful validation
+      # Get `original` used to support comparing values against the original (Issue #56).
+      component.original = ensureValue && ensureValue.original || new ReactiveVar(component.initValue)
+      component.value    = ensureValue && ensureValue.value    || new ReactiveVar(component.initValue)
+      component.valueDep = ensureValue && ensureValue.dep      || new Tracker.Dependency
+
+      # Save a value--usually after successful validation.
       setValue = (value, fromUserEvent) ->
 
         # Initial value from passed-in data will get validated on render.
@@ -523,57 +687,59 @@
       # Because we check `options.providesData` this should only fire once per element.
       # Also, this will only run if we're using SimpleSchema.
       component.providesData && component.schemaContext? && self.autorun ->
-        value = component.value.get()
+        val = component.value.get()
 
+        # Use `validateValue` to skip dealing with the DOM.
         Tracker.nonreactive ->
+          isValid = validateValue(val)
 
-          # Use `validateValue` to skip dealing with the DOM (this is below).
-          isValid = validateValue(value)
+          # Not doing anything with `isValid` here but could later.
 
-          # Add validated value to parent form block's `validatedValues`
-          #
-          # XXX We could send data to the form block's context if we knew whether the change
-          # came from a user event. Unfortunately, we can't tell here, so we need to send it
-          # up before it gets validated.
-          #
-          # This doesn't actually cause any problems, but it's not ideal--
-          # Invalid data should never make its way to the form data context.
-          #
-          # Need to possibly update how we handle `changed` event.
 
       # Support remote changes (Issue #40)
       # ----------------------------------
-      # When data is changed remotely during a form session, there are three ways to handle the
-      # experience. First, ignore the change and let the user submit their new form. Second,
-      # patch in the changes mid-session without any type of notification. Third, notify the
-      # user of remote changes and give them the opportunity to add those into the current
-      # session (giving them time to save their work elsewhere).
-      #
-      # `templates:forms` can be configured to support all three of the above options.
+      # With this package, there are three ways to handle remote changes to initial data
+      # during a form session.
+      # 1. Ignore the change and let the user submit their new form.
+      # 2. Patch in the changes mid-session without any type of notification.
+      # 3. Notify the user of remote changes and give them the opportunity to patch those
+      # into the current session (giving them time to save their work elsewhere).
 
       # Track whether the remote value has changed (use this to show a message in the UI).
       component.remoteValueChange = new ReactiveVar(false)
+
+      # Store remote data changes without replacing the local value.
+      component.newRemoteValue = new ReactiveVar(component.initValue)
+
+      # Import and validate remote changes into current form context.
+      # Optionally, pass a custom value to accept as a remote change.
+      component.refresh = (val) ->
+        if Match.test(val, undefined)
+          val = component.newRemoteValue.get()
+
+        # Set the new value if the user has no unique changes for this field.
+        if Match.test(component.value.get(), undefined) || !component.changed.get()
+          setValue(val)
+
+        component.original.set(val)  # Use new value as original.
+        component.valueDep.changed() # Recompute template helpers to show new value.
 
       # Ignore the presence of remote changes to the current form's data.
       component.ignoreValueChange = ->
         component.remoteValueChange.set(false)
 
-      # Import and validate remote changes into current form context.
+      # Accept remote changes to the current form's data.
       component.acceptValueChange = ->
         component.remoteValueChange.set(false)
-        setValue(component.newRemoteValue.get()) # Set even if invalid. Autorun validates.
-        component.valueDep.changed()
-
-      # Store remote data changes without replacing the local value.
-      component.newRemoteValue = new ReactiveVar(component.initValue)
+        component.refresh()
 
       # Track remote data changes reactively.
       self.autorun ->
         data = component.isChild && Template.parentData(component.distance) ||
           Template.currentData()
 
-        if data?.data?[component.field]?
-          fieldValue = data.data[component.field]
+        if data?.data?
+          fieldValue = dotNotationToValue(data.data, component.field)
 
           # Update reactiveValue without tracking it.
           Tracker.nonreactive ->
@@ -581,17 +747,24 @@
             # If the remote value is different from what's in initial data, set `newRemoteValue`.
             # Otherwise, leave it--the user's edits are still just as valid.
             if !_.isEqual(component.value.get(), fieldValue)
+              component.newRemoteValue.set(fieldValue)
 
               # Allow for remote data changes to pass through without user action.
               # This is important for the experience of some components.
               if component.passThroughData
-                setValue(fieldValue)
-                component.valueDep.changed()
-              else
+                component.refresh()
 
-                # Set value and let us know there's been a remote change.
-                component.newRemoteValue.set(fieldValue)
+              else
                 component.remoteValueChange.set(true)
+
+
+      # Store methods
+      # -------------
+
+      # Send a few methods to form-level context, if possible (Issue #55).
+      if ensureValue && _.has(ensureValue, 'storeMethods')
+        ensureValue.storeMethods refresh: component.refresh
+
 
       # Callback for `validationEvent` trigger
       # --------------------------------------
@@ -613,9 +786,6 @@
         # Can't pass in `clean` method if user isn't using SimpleSchema.
         cleanValue = component.schemaContext? && cleanValue || (arg) ->
           return arg
-
-        # Check `instanceof Stopper` to make sure we don't mistake stops for user input.
-        Stopper = ->
 
         # Create a useful context to bind `getValidationValue` to.
         ctx =
@@ -687,6 +857,16 @@
       component = inst[MODULE_NAMESPACE]
       return component.value.get()
 
+    originalValue: -> # Use to show the original value of initial data for this field.
+      inst = Template.instance()
+      component = inst[MODULE_NAMESPACE]
+      return component.original.get()
+
+    uniqueValue: -> # Has the value changed from the original (initial) value?
+      inst = Template.instance()
+      component = inst[MODULE_NAMESPACE]
+      return !_.isEqual(component.original.get(), component.value.get())
+
     newRemoteValue: -> # Stores any underlying changes in the data, if reactive.
       inst = Template.instance()
       component = inst[MODULE_NAMESPACE]
@@ -698,25 +878,26 @@
       component = inst[MODULE_NAMESPACE]
       return component.remoteValueChange.get()
 
-    valid: -> # (Use to show positive state on element, like a check mark).
+    valid: -> # Use to show positive state on element, like a check mark.
       inst = Template.instance()
       component = inst[MODULE_NAMESPACE]
       return component.valid.get()
 
-    changed: -> # (Use to show or hide things after first valid value change).
+    changed: -> # Use to show or hide things after first valid value change.
       inst = Template.instance()
       component = inst[MODULE_NAMESPACE]
       return component.changed.get()
 
-    unchanged: -> # (Use to show or hide things after first valid value change).
+    unchanged: -> # Use to show or hide things after first valid value change.
       inst = Template.instance()
       component = inst[MODULE_NAMESPACE]
       return !component.changed.get()
 
-    isChild: -> # (Use to show or hide things regardless of parent state).
+    isChild: -> # Use to show or hide things regardless of parent state.
       inst = Template.instance()
       component = inst[MODULE_NAMESPACE]
       return component.isChild
+
 
     # These are from SimpleSchema functionality
     # -----------------------------------------
@@ -745,11 +926,12 @@
       if component.schemaContext? and component.field?
         return component.schemaContext.keyErrorMessage(component.field)
 
+
     # These are from the parent form block
     # ------------------------------------
     # Default to `false` if no form block exists.
 
-    submitted: -> # (Use to delay showing errors until first submit).
+    submitted: -> # Use to delay showing errors until first submit.
       inst = Template.instance()
       component = inst[MODULE_NAMESPACE]
       if component.isChild
@@ -765,7 +947,7 @@
       else
         return inst.data.unsubmitted || false
 
-    loading: -> # (Use to disable elements while submit action is running).
+    loading: -> # Use to disable elements while submit action is running.
       inst = Template.instance()
       component = inst[MODULE_NAMESPACE]
       if component.isChild
@@ -773,7 +955,7 @@
       else
         return inst.data.loading || false
 
-    success: -> # (Use to hide things after a successful submission).
+    success: -> # Use to hide things after a successful submission.
       inst = Template.instance()
       component = inst[MODULE_NAMESPACE]
       if component.isChild
@@ -829,6 +1011,7 @@
           options[key] = obj[key]
 
       if _.has(obj, 'validationEvent') # (Issue #33)
+
 
         # Compile selector in `options`. Allow array for `validationEvent` (Issue #52).
         # -----------------------------------------------------------------------------

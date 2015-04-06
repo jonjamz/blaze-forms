@@ -103,7 +103,6 @@ The **action function** runs when the form is submitted. It takes three params, 
 * `changed`
   * If you passed in initial data, this contains an object with only the fields that have changed.
     If you didn't, this is `undefined`.
-  * If a field was changed to a different value and back, it will still be in this object.
   * This is useful for figuring out what fields to use in an update query.
 
 Also, all validated form values are available with no extra work from `this`:
@@ -258,6 +257,11 @@ Element templates have access to the following *local* helpers:
   * The last value of this Element that was able to pass validation.
   * Useful with some form components, such as a toggle button.
   * If you specified a `data` object on the form or Element, this will initially hold the value associated with the relevant field in that object.
+* `{{originalValue}}` (when initial data)
+  * This contains the original value from initial data for this field.
+* `{{uniqueValue}}` (when initial data)
+  * This is *true* if the Element's current value differs from the original value, or *false* if it's the same.
+  * Use this to show users what fields they've changed and what fields they haven't.
 * `{{valid}}`
   * Use this to show validation state on the Element, for example a check mark.
   * Initial data passed into the Element is validated on `rendered`.
@@ -598,6 +602,39 @@ We can control how we deal with remote changes using these template instance met
     the Elements, depending on your configuration).
 * `ignoreValueChange()`
   * A method that resets `remoteValueChange` to *false*.
+
+For more fine-grained control over how your form handles remote data changes, specify an `onDataChange` hook
+via a template helper (just like *schema*, *action*, and *data*):
+
+```javascript
+Template['testForm'].helpers({
+  onDataChange: function() {
+    return function(oldData, newData) {
+      if (!_.isEqual(oldData, newData)) {
+
+        // Use one or more of the below methods.
+        // Usually, you should only need `this.refresh()`.
+        // Create an issue if you need something else here.
+
+        // Reset the form (equivalent to `callbacks.reset()` in the action function).
+        this.reset(true);
+
+        // Refresh unchanged Elements to reflect new data.
+        // Optionally: `this.refresh('dot.notation', customValue)`.
+        this.refresh();
+
+        // This sets the form's `changed` state to `true`.
+        this.changed();
+
+      }
+    };
+  }
+});
+
+```
+
+This hook allows you to update your entire form during remote data changes without needing
+to use `passThroughData` on individual elements.
 
 Other Forms Packages
 --------------------
