@@ -1,3 +1,10 @@
+1.14.1
+======
+
+* Fix regression (Issue #38) where `_id` fails to show up in the data context of the `action` function.
+* Address issue #55.
+  * Calling `reset(true)` now resets `changed` and `valid` states on individual elements.
+
 1.14.0
 ======
 

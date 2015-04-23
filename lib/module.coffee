@@ -172,7 +172,7 @@
         if message && component[activeState + 'Message']
           component[activeState + 'Message'].set(message)
 
-      # This state is a special case.
+      # Set `changed` state.
       # As `success` represents the end of a form session, a subsequent `change` should
       # initiate a new session, if the UI is still editable.
       setChanged = ->
@@ -184,6 +184,7 @@
           component.success.set(false)
           component.submitted.set(false)
 
+      # Reset form and element states (called from inside `resetForm` below).
       resetStates = (hard) ->
         component.changed.set(false)
         component.submitted.set(false)
@@ -193,6 +194,11 @@
         if hard
           component.failed.set(false)
           component.success.set(false)
+
+          # Reset element states (see if this works here?)
+          for field, obj of elementValues
+            obj.changed.set(false)
+            obj.valid.set(true)
 
 
       # Schema
@@ -230,7 +236,9 @@
       # `fieldName: {
       #   original: new ReactiveVar(value), // Used to track changes against initial data.
       #   value: new ReactiveVar(value),    // The current stored value.
-      #   dep: new Tracker.Dependency,      // Used to show remotely changed data in templates.
+      #   valueDep: new Tracker.Dependency, // Used to show remotely changed data in templates.
+      #   valid: new ReactiveVar(true),     // Whether the current value is valid according to schema.
+      #   changed: new ReactiveVar(false),  // Whether the element has been changed by a user.
       #   storeMethods: function () { ... } // Used to pass element-level methods to form-level.
       # }`
       #
@@ -242,16 +250,18 @@
         for field, obj of elementValues
           obj.original.set(null)
           obj.value.set(null)
-          obj.dep.changed()
+          obj.valueDep.changed()
 
       # Set new reactive value in `elementValues` or get the existing property.
       # Also provide a dependency for element templates to track.
-      component.ensureElementValue = (field, value) ->
+      component.ensureElement = (field, value) ->
         return _.has(elementValues, field) && elementValues[field] ||
           elementValues[field] =
             original: new ReactiveVar(value)
-            value: new ReactiveVar(value)
-            dep: new Tracker.Dependency
+            value:    new ReactiveVar(value)
+            valueDep: new Tracker.Dependency
+            valid:    new ReactiveVar(true)
+            changed:  new ReactiveVar(false)
 
             # Here `methods` is an object.
             storeMethods: (methods) ->
@@ -325,8 +335,8 @@
         changedValues = self.data.data && {} || undefined
         resetElementValues()
 
-        # Reset all form states to init values (false).
-        # For hard reset, kill the last success/failed states too.
+        # Reset all form states to init values.
+        # For hard reset, kill the last success/failed states and element states.
         resetStates(hard)
         if hard
           component.successMessage.set(null)
@@ -341,45 +351,49 @@
       # Hook into underlying data changes at the form-level.
       self.autorun ->
         data = Template.currentData()
-        if data.data && !_.isEqual(data.data, initialData)
 
-          # Run provided `onDataChange` hook if available (Issue #55).
-          if self.data.onDataChange
+        # If there is data, handle it.
+        if data.data
 
-            # Add useful methods here (create an issue if you have a request).
-            ctx =
-              reset: resetForm
+          # Add `_id` to form field data if present (Issue #38)--other fields are tracked
+          # reactively in their respective elements.
+          if _.has(data.data, '_id')
+            validatedValues._id = data.data._id
 
-              # Arguments are optional--`field` accepts dot notation.
-              # If no arguments are passed, all fields will refresh, meaning all elements will
-              # accept any updates to underlying (initial) data.
-              refresh: (field, val) ->
+          if !_.isEqual(data.data, initialData)
 
-                # Postpone executing this until `newRemoteValue` is set in elements.
-                # This also ensures that `refresh` is behind `reset` when they're both called
-                # in the hook.
-                Tracker.afterFlush ->
+            # Run provided `onDataChange` hook if available (Issue #55).
+            if self.data.onDataChange
 
-                  if field && _.has(elementValues, field)
-                    elementValues[field].refresh(val)
+              # Add useful methods here (create an issue if you have a request).
+              ctx =
+                reset: resetForm
 
-                  else
-                    for own field, methods of elementValues
-                      methods.refresh()
+                # Arguments are optional--`field` accepts dot notation.
+                # If no arguments are passed, all fields will refresh, meaning all elements will
+                # accept any updates to underlying (initial) data.
+                refresh: (field, val) ->
 
-              changed: ->
-                setChanged()
+                  # Postpone executing this until `newRemoteValue` is set in elements.
+                  # This also ensures that `refresh` is behind `reset` when they're both called
+                  # in the hook.
+                  Tracker.afterFlush ->
 
-            # Call hook bound to context, passing in old and new data for comparison.
-            self.data.onDataChange.call(ctx, initialData, data.data)
+                    if field && _.has(elementValues, field)
+                      elementValues[field].refresh(val)
 
-          # Set `initialData` to new value (so it's "old" the next time around).
-          initialData = data.data
+                    else
+                      for own field, methods of elementValues
+                        methods.refresh()
 
-          # Add `_id` to form field data if present (Issue #38).
-          # We track this field here because the other fields are tracked reactively in their
-          # respective elements.
-          _.has(data.data, '_id') && validatedValues._id = data.data._id
+                changed: ->
+                  setChanged()
+
+              # Call hook bound to context, passing in old and new data for comparison.
+              self.data.onDataChange.call(ctx, initialData, data.data)
+
+            # Set `initialData` to new value (so it's "old" the next time around).
+            initialData = data.data
 
 
       # Selectors
@@ -455,7 +469,7 @@
         failed: component.failed
         invalid: component.invalid
         changed: component.changed
-        ensureElementValue: component.ensureElementValue
+        ensureElement: component.ensureElement
         setValidatedValue: component.setValidatedValue
         addResetFunction: component.addResetFunction
         addCustomSelector: component.addCustomSelector
@@ -628,20 +642,26 @@
           component.initValue = dotNotationToValue(self.data.data, component.field)
 
 
-      # States
-      # ------
+      # Ensured setup
+      # -------------
+      # Set up localized properties, integrating with parent form context if available.
 
-      component.valid = new ReactiveVar(true)
-      component.changed = new ReactiveVar(false)
+      # Get reactive value and deps from form block if available.
+      ensured = component.field &&
+        component.parentData?.ensureElement?(component.field, component.initValue)
 
-      component.schemaContext? && self.autorun ->
-        invalid = component.schemaContext.keyIsInvalid(component.field)
-        component.valid.set(!invalid)
+      # Get `original` used to support comparing values against the original (Issue #56).
+      component.original = ensured && ensured.original || new ReactiveVar(component.initValue)
+      component.value    = ensured && ensured.value    || new ReactiveVar(component.initValue)
+      component.valueDep = ensured && ensured.valueDep || new Tracker.Dependency
+      component.valid    = ensured && ensured.valid    || new ReactiveVar(true)
+      component.changed  = ensured && ensured.changed  || new ReactiveVar(false)
 
 
       # Validation
       # ----------
 
+      # Validate a value without setting it anywhere.
       validateValue = (val) ->
 
         # Transform field/value to a (possibly nested) object.
@@ -653,21 +673,22 @@
         # Set `valid` property to reflect in templates.
         component.valid.set(isValid)
 
+        # Return whether the value is now valid--we don't need to use this right now because
+        # we use the autorun below to determine validity reactively.
         return isValid
+
+      # Couple the schema's reactive validation with the element's own `valid` state.
+      component.schemaContext? && self.autorun ->
+
+        # Check this field's reactive validity in the schema--if we move to using our own
+        # internal validation context, we won't need to rely on SimpleSchema for this.
+        invalid = component.schemaContext.keyIsInvalid(component.field)
+
+        component.valid.set(!invalid)
 
 
       # Value
       # -----
-      # Track this element's latest validated value, starting with init data
-
-      # Get reactive value and deps from form block if available.
-      ensureValue = component.field &&
-        component.parentData?.ensureElementValue?(component.field, component.initValue)
-
-      # Get `original` used to support comparing values against the original (Issue #56).
-      component.original = ensureValue && ensureValue.original || new ReactiveVar(component.initValue)
-      component.value    = ensureValue && ensureValue.value    || new ReactiveVar(component.initValue)
-      component.valueDep = ensureValue && ensureValue.dep      || new Tracker.Dependency
 
       # Save a value--usually after successful validation.
       setValue = (value, fromUserEvent) ->
@@ -762,8 +783,8 @@
       # -------------
 
       # Send a few methods to form-level context, if possible (Issue #55).
-      if ensureValue && _.has(ensureValue, 'storeMethods')
-        ensureValue.storeMethods refresh: component.refresh
+      if ensured && _.has(ensured, 'storeMethods')
+        ensured.storeMethods refresh: component.refresh
 
 
       # Callback for `validationEvent` trigger
@@ -790,6 +811,7 @@
         # Create a useful context to bind `getValidationValue` to.
         ctx =
           stop: new Stopper()
+          startup: !fromUserEvent
           validate: (val) ->
             setValue(val, fromUserEvent)
             return this.stop # Prevents automatic validator from running (see below).
