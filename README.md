@@ -29,12 +29,12 @@ templates:forms comes with two predefined basic components, `basicFormBlock` and
 
 ```html
 <template name="createNews">
-    <h4>Create a News</h4>
-    {{#basicFormBlock schema=getShema action=getAction}}
-        {{> basicInput field="title"}}
-        {{> basicInput field="body"}}
-        <button type="submit" disabled="{{#if form.invalidCount}}disabled{{/if}}">Submit</button>
-    {{/basicFormBlock}}
+  <h4>Create a News</h4>
+  {{#basicFormBlock schema=getShema action=getAction}}
+    {{> basicInput field="title"}}
+    {{> basicInput field="body"}}
+    <button type="submit" disabled="{{#if form.invalidCount}}disabled{{/if}}">Submit</button>
+  {{/basicFormBlock}}
 </template>
 ```
 ```javascript
@@ -43,7 +43,7 @@ Template.createNews.helpers({
   getSchema: function() {
     return new SimpleSchema({
       title: { type: String, max: 3 },
-      body:  { type: String, max: 10, optional: true }
+      body:  { type: String, max: 20, optional: true }
     });
   },
 
@@ -63,8 +63,8 @@ Create a form element:
 
 ```html
 <template name="myInput">
-   <input class="reactive-element" value="{{value}}">
-   <p>{{#unless valid}}{{errorMessage}}{{/unless}}</p>
+  <input class="reactive-element" value="{{value}}">
+  <p>{{#unless valid}}{{errorMessage}}{{/unless}}</p>
 </template>
 ```
 
@@ -72,11 +72,11 @@ Or a richer version, using Bootstrap for example:
 
 ```html
 <template name="myInput">
-    <div class="form-group {{#unless valid}}has-error{{/unless}}">
-        <label class="control-label">{{label}}</label>
-        <input class="form-control reactive-element" value="{{value}}">
-        <p class="help-block">{{#unless valid}}{{errorMessage}}{{/unless}}</p>
-    </div>
+  <div class="form-group {{#unless valid}}has-error{{/unless}}">
+    <label class="control-label">{{label}}</label>
+    <input class="form-control reactive-element" value="{{value}}">
+    <p class="help-block">{{#unless valid}}{{errorMessage}}{{/unless}}</p>
+  </div>
 </template>
 ```
 
@@ -94,12 +94,12 @@ TemplatesForms.registerElement({
 Create your form:
 ```html
 <template name="updateNews">
-    <h4>Update a News</h4>
-    {{#basicFormBlock schema=getSchema data=currentNews action=getAction}}
-        {{> myInput field="title"}}
-        {{> myInput field="body"}}
-        <button type="submit" disabled="{{#if form.invalidCount}}disabled{{/if}}">Submit</button>
-    {{/basicFormBlock}}
+  <h4>Update a News</h4>
+  {{#basicFormBlock schema=getSchema data=currentNews action=getAction}}
+    {{> myInput field="title"}}
+    {{> myInput field="body"}}
+    <button type="submit" disabled="{{#if form.invalidCount}}disabled{{/if}}">Submit</button>
+  {{/basicFormBlock}}
 </template>
 ```
 
@@ -157,18 +157,18 @@ Notice that the form block must contain the `UI.contentBlock` line with the prop
 Register your form block:
 ```javascript
 TemplatesForms.registerFormBlock({
-    template: 'bootstrapModal',
-    submitType: 'normal'
+  template: 'bootstrapModal',
+  submitType: 'normal'
 });
 ```
 
 Create your form:
 ```html
 <template name="updateNews">
-    {{#bootstrapModal modalId="updateNews" modalTitle="Update News" schema=getShema data=currentNews action=getAction}}
-      {{> myInput field="title"}}
-      {{> myInput field="body"}}
-    {{/bootstrapModal}}
+  {{#bootstrapModal modalId="updateNews" modalTitle="Update News" schema=getShema data=currentNews action=getAction}}
+    {{> myInput field="title"}}
+    {{> myInput field="body"}}
+  {{/bootstrapModal}}
 </template>
 ```
 
@@ -188,12 +188,12 @@ Use your form:
 Built with Bootstrap 3 and the `sacha:spin` package, it demonstrates how flexible and extensible this package is.
 
 <br />
-## Reference Guides
+## Reference
 
 #### API
 
-- Form Blocks
-- Form Elements
+- [Form Blocks](docs/reference/api/FormBlocks.md)
+- [Form Elements](docs/reference/api/FormElements.md)
 
 #### How-To Guides
 
@@ -203,15 +203,16 @@ Built with Bootstrap 3 and the `sacha:spin` package, it demonstrates how flexibl
 - [Handle Reactive Changes to Initial Data](docs/reference/how-to/handle-reactive-changes-to-initial-data.md)
 - [Use the Same Action Function for Inserts and Updates](docs/reference/how-to/use-the-same-action-function-for-inserts-and-updates.md)
 - [Maximize Reusability with Nested Elements](docs/reference/how-to/maximize-reusability-with-nested-elements.md)
+- [Extend Simple-Schema for Better Use With Forms](docs/reference/how-to/extend-simple-schema-for-better-use-with-forms.md)
 
 #### Examples
 
-See `docs/reference/examples`.
+See `docs/reference/examples`. Some of these are incomplete/untested.
 
-- Form Blocks
-  - Generic (Submit Button, Loading Spinner, Messages)
-  - Hide Submit Button Until Valid
-- Form Elements
+- **Form Blocks**
+  - [Basic With Submit Button and Messaging](docs/reference/examples/form-blocks/basic-with-submit-button-and-messaging.md)
+  - [Hide Submit Button Until Valid](docs/reference/examples/form-blocks/hide-submit-button-until-valid.md)
+- **Form Elements**
   - Basic
     - [Text Input](docs/reference/examples/form-elements/basic/TextInput.md)
     - [Textarea](docs/reference/examples/form-elements/basic/Textarea.md)
