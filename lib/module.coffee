@@ -931,25 +931,25 @@
     schema: -> # Use to get allowedValues, max, etc. for this field (Issue #8).
       inst = Template.instance()
       component = inst[MODULE_NAMESPACE]
-      if component.schema? and component.field?
+      if component.schema?._schema? and component.field?
         return component.schema._schema[component.field]
 
     label: ->
       inst = Template.instance()
       component = inst[MODULE_NAMESPACE]
-      if component.schema? and component.field?
+      if component.schema?.label? and component.field?
         return component.schema.label(component.field)
 
     instructions: ->
       inst = Template.instance()
       component = inst[MODULE_NAMESPACE]
-      if component.schema? and component.field?
+      if component.schema?.keyInstructions? and component.field?
         return component.schema.keyInstructions(component.field)
 
     errorMessage: ->
       inst = Template.instance()
       component = inst[MODULE_NAMESPACE]
-      if component.schemaContext? and component.field?
+      if component.schemaContext?.keyErrorMessage? and component.field?
         return component.schemaContext.keyErrorMessage(component.field)
 
 
