@@ -13,7 +13,7 @@ A TemplatesForms Form Block is a reusable component that plays the same role as 
 Here's an example of a compatible Form Block template.
 
 ```handlebars
-<template name="basicFormBlock">
+<template name="myFormBlock">
   <form>
 
     <!--
@@ -93,7 +93,7 @@ Form Block templates have access to the following helpers:
 
 ```javascript
 ReactiveForms.registerFormBlock({
-  template: 'basicFormBlock',
+  template: 'myFormBlock',
   submitType: 'normal' // or 'enterKey', which captures that event in the form
 });
 ```
