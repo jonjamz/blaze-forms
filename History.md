@@ -3,9 +3,13 @@
 
 * Major docs update, now easier to read and with lots of examples.
 * Improve some existing names within the package:
-  * `formBlock` is now simply `form`.
-  * `ReactiveForms` namespace is now `TemplatesForms`.
-  * `context` global helper is now `formContext`.
+  * The following have backwards-compatible aliases:
+    * `ReactiveForms` namespace is now `TemplatesForms`.
+    * `createElement` is now `registerFormElement`.
+    * `createFormBlock` is now `registerFormBlock`.
+    * `context` internal Form Block helper is now `form`.
+  * The following are breaking changes that are not backwards-compatible.
+    * `context` global helper is now `form`.
 * Internal storage API now uses [jamz:store](https://github.com/jonjamz/store) which is backed by unit tests.
 
 1.14.1

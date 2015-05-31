@@ -1,4 +1,4 @@
-@ReactiveForms = ReactiveForms = do ->
+@TemplatesForms = @ReactiveForms = ReactiveForms = do ->
 
 
 
@@ -455,7 +455,7 @@
     # This gets passed down to elements (Issue #15)
     # ---------------------------------------------
 
-    context: ->
+    form: ->
       inst = Template.instance()
       component = inst[MODULE_NAMESPACE]
 
@@ -595,6 +595,10 @@
           component.distance++
 
           data = Template.parentData(component.distance)
+
+          # In 2.0.0, support `form` instead of `context` (just an alias).
+          if data && _.has(data, 'form')
+            data.context = data.form
 
           # Child element in this context?
           if data && _.has(data, 'context')
@@ -997,7 +1001,7 @@
   # ----------------------------------
   # Accepts any compatible ReactiveForm element template, and a choice of validation events.
 
-  createElement = (obj) ->
+  registerFormElement = (obj) ->
     check obj, Match.ObjectIncluding
       template: String
       validationEvent: Match.Optional(Match.OneOf(String, [String]))
@@ -1068,7 +1072,7 @@
   # -----------------------
   # Accepts any compatible ReactiveForm form template, and a choice of submit types.
 
-  createFormBlock = (obj) ->
+  registerFormBlock = (obj) ->
     check obj, Match.ObjectIncluding
       template: String
       submitType: String
@@ -1113,10 +1117,22 @@
       template.helpers(forms.helpers)
       template.events(evt)
 
+
+  # Deprecated aliases
+  # ------------------
+  # Fire warning but keep backwards compatibility.
+
   createForm = (obj) ->
-    deprecatedLogger('createForm', 'createFormBlock')
+    deprecatedLogger('createForm', 'registerFormBlock')
     return createFormBlock(obj)
 
+  createFormBlock = (obj) ->
+    deprecatedLogger('createFormBlock', 'registerFormBlock')
+    return createFormBlock(obj)
+
+  createElement = (obj) ->
+    deprecatedLogger('createElement', 'registerFormElement')
+    return registerFormElement(obj)
 
 
 
@@ -1125,8 +1141,12 @@
   # ========================================================================================
 
   return {
-    createFormBlock: createFormBlock
-    createForm: createForm # Deprecated. Use `createFormBlock` instead.
-    createElement: createElement
+    registerFormBlock: registerFormBlock
+    registerFormElement: registerFormElement
     namespace: MODULE_NAMESPACE # (Issue #43)
+
+    # Deprecated
+    createForm: createForm
+    createFormBlock: createFormBlock
+    createElement: createElement
   }

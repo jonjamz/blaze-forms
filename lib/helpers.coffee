@@ -1,4 +1,4 @@
-Template.registerHelper 'context', ->
+Template.registerHelper 'form', ->
   context = Template.instance?().data?.context
 
   return {

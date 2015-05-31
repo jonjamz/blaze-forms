@@ -1,3 +1,3 @@
-ReactiveForms.createFormBlock
+ReactiveForms.registerFormBlock
   template: 'defaultFormBlock'
   submitType: 'normal'

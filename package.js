@@ -29,8 +29,7 @@ Package.onUse(function(api) {
   // Templates
   api.addFiles('templates/defaultFormBlock.html', 'client');
   api.addFiles('templates/basicFormBlock.html', 'client');
-  api.addFiles('templates/basicForm.html', 'client');
-  api.addFiles('templates/basicInput.html', 'client');
+  api.addFiles('templates/basicFormElement.html', 'client');
 
   // Lib
   api.addFiles('lib/extensions/simple-schema.coffee');
