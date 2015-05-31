@@ -2,14 +2,19 @@
 =====
 
 * Major docs update, now easier to read and with lots of examples.
+* Remove Simple Schema extension for the `instructions` field (code is [available here](docs/reference/how-to/extend-simple-schema-for-better-use-with-forms.md)).
+* Remove old `basicFormBlock` example template (code is [available here](docs/reference/examples/form-blocks/basic-with-submit-button-and-messaging.md)).
+* Rename `defaultFormBlock` to `basicFormBlock`.
 * Improve some existing names within the package:
   * The following have backwards-compatible aliases:
     * `ReactiveForms` namespace is now `TemplatesForms`.
     * `createElement` is now `registerFormElement`.
     * `createFormBlock` is now `registerFormBlock`.
-    * `context` internal Form Block helper is now `form`.
   * The following are breaking changes that are not backwards-compatible.
-    * `context` global helper is now `form`.
+    * `context` helper is now `form`, both internal and global.
+* Address issue #63.
+  * The `validationValue` method now has `this.initial`, a value that is `true` when it's being
+    run as part of initial form validation.
 * Internal storage API now uses [jamz:store](https://github.com/jonjamz/store) which is backed by unit tests.
 
 1.14.1

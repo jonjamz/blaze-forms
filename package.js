@@ -27,7 +27,6 @@ Package.onUse(function(api) {
   api.imply('aldeed:simple-schema');
 
   // Templates
-  api.addFiles('templates/defaultFormBlock.html', 'client');
   api.addFiles('templates/basicFormBlock.html', 'client');
   api.addFiles('templates/basicFormElement.html', 'client');
 
