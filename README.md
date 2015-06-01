@@ -192,7 +192,7 @@ Built with Bootstrap 3 and the `sacha:spin` package, it demonstrates how flexibl
 
 ### API Guides
 
-Full explanation of usage capabilities.
+Low-level guides covering advanced usage and capabilities.
 
 - [Form Blocks](docs/reference/api/FormBlocks.md)
 - [Form Elements](docs/reference/api/FormElements.md)
