@@ -76,7 +76,7 @@
   # for example, `{id: {name: 'Jon'}}` will be overwritten by `{id: {name: {first: 'Jon'}}}`
   deepExtendObject = (first, second) ->
     for own prop of second
-      if isObject(first[prop]) && _.has(first, prop)
+      if isObject(first[prop]) && _.has(first, prop) && !_.isDate(first[prop])
         deepExtendObject(first[prop], second[prop])
       else
         first[prop] = second[prop]
