@@ -21,7 +21,7 @@ $ meteor add templates:forms
 ```
 
 <br />
-## Examples
+## Getting Started
 
 ### Minimal Usage: Check That It Works!
 
@@ -188,7 +188,15 @@ Use your form:
 Built with Bootstrap 3 and the `sacha:spin` package, it demonstrates how flexible and extensible this package is.
 
 <br />
-## Reference
+## Learn More
+
+### API Reference
+
+Low-level guides covering advanced usage and capabilities.
+
+- [Form Blocks](docs/reference/api/FormBlocks.md)
+- [Form Elements](docs/reference/api/FormElements.md)
+- [Action Function](docs/reference/api/ActionFunction.md) (Submit handling)
 
 ### How-To Guides
 
@@ -201,14 +209,6 @@ In-depth guides covering specific use cases.
 - [Use the Same Action Function for Inserts and Updates](docs/reference/how-to/use-the-same-action-function-for-inserts-and-updates.md)
 - [Maximize Reusability with Nested Elements](docs/reference/how-to/maximize-reusability-with-nested-elements.md)
 - [Extend Simple-Schema for Better Use With Forms](docs/reference/how-to/extend-simple-schema-for-better-use-with-forms.md)
-
-### API Reference
-
-Low-level guides covering advanced usage and capabilities.
-
-- [Form Blocks](docs/reference/api/FormBlocks.md)
-- [Form Elements](docs/reference/api/FormElements.md)
-- [Action Function](docs/reference/api/ActionFunction.md) (Submit handling)
 
 ### Examples
 
