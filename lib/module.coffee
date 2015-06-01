@@ -31,7 +31,7 @@
 
   # Test for object, not limited to just plain objects. (Issue #9, #34)
   isObject = (x) ->
-    return _.isObject(x) && !_.isArray(x) && !_.isFunction(x)
+    return _.isObject(x) && !_.isArray(x) && !_.isFunction(x) && !_.isDate(x) && !_.isRegExp(x);
 
 
   # Nested object support

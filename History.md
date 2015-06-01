@@ -1,3 +1,8 @@
+1.14.2
+======
+
+* Adjust internal `isObject` function to fail for Date objects and regular expressions.
+
 1.14.1
 ======
 
