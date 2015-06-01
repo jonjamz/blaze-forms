@@ -16,10 +16,10 @@ Template.fullName.helpers({
 
 ```handlebars
 <template name="fullName">
-{{#basicFormBlock data=getData schema=getSchema action=getAction}}
-  {{> nameInput field='firstName'}}
-  {{> nameInput field='lastName'}}
-{{/basicFormBlock}}
+  {{#basicFormBlock data=getData schema=getSchema action=getAction}}
+    {{> nameInput field='firstName'}}
+    {{> nameInput field='lastName'}}
+  {{/basicFormBlock}}
 </template>
 ```
 
