@@ -14,9 +14,9 @@ Use `{{invalidCount}}` for this because it changes in real-time as Element value
     }}
 
     <p>
-      {{#if invalidCount}}
+      {{#unless invalidCount}}
         <button type="submit">Submit</button>
-      {{/if}}
+      {{/unless}}
 
       <span>
         {{#if loading}}
