@@ -190,7 +190,7 @@ Built with Bootstrap 3 and the `sacha:spin` package, it demonstrates how flexibl
 <br />
 ## Reference
 
-### API Guides
+### APIs
 
 Low-level guides covering advanced usage and capabilities.
 
@@ -228,6 +228,11 @@ Example code with annotations.
     - [Select (Multi)](docs/reference/examples/form-elements/advanced/MultiSelect.md)
     - [Adjustable Number of Inputs](docs/reference/examples/form-elements/advanced/AdjustableNumberOfInputs.md)
     - [Date and Time](docs/reference/examples/form-elements/advanced/DateAndTime.md)
+
+#### Get Involved
+
+To report an error in the reference material, or if you would like to add your own example or guide,
+please create an issue.
 
 <br />
 Contributors
