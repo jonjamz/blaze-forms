@@ -31,7 +31,6 @@ Package.onUse(function(api) {
   api.addFiles('templates/basicInput.html', 'client');
 
   // Lib
-  api.addFiles('lib/extensions/simple-schema.coffee');
   api.addFiles('lib/helpers.coffee', 'client');
   api.addFiles('lib/module.coffee', 'client');
   api.addFiles('lib/init.coffee', 'client');
