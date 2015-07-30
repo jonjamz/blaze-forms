@@ -40,7 +40,8 @@ Template['inputElement'].helpers({
 Tempate['inputElement'].events({
   'click .add-field': function (event, template) {
     var currentFieldCount = Template.instance().numberOfFields.get();
-    Template.instance().numberOfFields.set(currentFieldCount++);
+    currentFieldCount++;
+    Template.instance().numberOfFields.set(currentFieldCount);
   }
 });
 ```
