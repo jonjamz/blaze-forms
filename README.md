@@ -44,7 +44,9 @@ ReactiveForms.createElement({
 
 Built with Bootstrap 3 and the `sacha:spin` package, it demonstrates how flexible and extensible this package is.
 
-Check out the code--see how simple it is to build an engaging form flow in a very _Meteor_ way!
+[View a Package User's Example](https://github.com/dmiskiew/meteor-templates-forms-example)
+
+One of the package users, Darek Miskiewicz, has put together a great example in the form of a GitHub repo that you might prefer over the live example. 
 
 Install
 -------
