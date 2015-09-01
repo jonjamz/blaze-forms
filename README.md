@@ -106,8 +106,9 @@ The **action function** runs when the form is submitted. It takes three params, 
   * If you passed in initial data, this contains an object with only the fields that have changed.
     If you didn't, this is `undefined`.
   * This is useful for figuring out what fields to use in an update query.
-
-Also, all validated form values are available with no extra work from `this`:
+  
+##### Retrieve Form Values with `this`
+All validated form values are available with no extra work:
 
 ```javascript
 // Inside the action function...
