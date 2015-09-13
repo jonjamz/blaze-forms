@@ -39,6 +39,7 @@ Template['inputElement'].helpers({
 // Add event to change custom state
 Tempate['inputElement'].events({
   'click .add-field': function (event, template) {
+    event.preventDefault();
     var currentFieldCount = Template.instance().numberOfFields.get();
     currentFieldCount++;
     Template.instance().numberOfFields.set(currentFieldCount);
