@@ -1,3 +1,20 @@
+vNext
+=====
+
+* Massive docs overhaul (Issues #14, #48, #62).
+
+2.0.0
+=====
+
+* Add missing `onDestroy` hook for elements (Issue #73).
+* Fix SimpleSchema support (Issues #69, #84).
+* Fix global `context` helper and rename it to `formContext` (Issue #64).
+  - Add several missing properties to the helper object.
+  - **This is the only breaking change to the public API in this release.**
+* Convert codebase to JavaScript as part of a transition to ES2015 classes.
+* Refactor code, package structure, and improve comments.
+* Update SimpleSchema dependency to latest version.
+
 1.14.2
 ======
 

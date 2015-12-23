@@ -1,3 +1,5 @@
+*Note: The latest release, `v2.0.0`, brings many great improvements and only one breaking change to the public API. Updated documentation is forthcoming. Please see the `History.md` document for details.*
+
 About
 -----
 

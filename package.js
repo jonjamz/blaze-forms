@@ -1,7 +1,7 @@
 Package.describe({
   name: 'templates:forms',
   summary: 'Dead easy reactive forms with validation.',
-  version: '1.14.2',
+  version: '2.0.0',
   git: 'https://github.com/meteortemplates/forms.git'
 });
 
@@ -14,29 +14,31 @@ Package.onUse(function(api) {
     'tracker',
     'check',
     'reactive-var',
-    'underscore',
-    'coffeescript'
+    'underscore'
   ], 'client');
 
   api.use([
-    'check',
-    'coffeescript'
+    'check'
   ], 'server');
 
-  api.use('aldeed:simple-schema@1.3.0');
+  api.use('aldeed:simple-schema@1.5.2');
   api.imply('aldeed:simple-schema');
 
   // Templates
   api.addFiles('templates/defaultFormBlock.html', 'client');
-  api.addFiles('templates/basicFormBlock.html', 'client');
-  api.addFiles('templates/basicForm.html', 'client');
-  api.addFiles('templates/basicInput.html', 'client');
+  api.addFiles('templates/examples/basicForm.html', 'client');
+  api.addFiles('templates/examples/basicFormBlock.html', 'client');
+  api.addFiles('templates/examples/basicInput.html', 'client');
 
-  // Lib
-  api.addFiles('lib/extensions/simple-schema.coffee');
-  api.addFiles('lib/helpers.coffee', 'client');
-  api.addFiles('lib/module.coffee', 'client');
-  api.addFiles('lib/init.coffee', 'client');
+  // Extensions
+  api.addFiles('extensions/simple-schema.js');
+
+  // Library
+  api.addFiles('src/helpers.js', 'client');
+  api.addFiles('src/module.js', 'client');
+
+  // Setup
+  api.addFiles('init.js', 'client');
 });
 
 Package.onTest(function(api) {
