@@ -3,14 +3,21 @@ vNext
 
 * Massive docs overhaul (Issues #14, #48, #62).
 
+2.1.0
+=====
+
+* Address issue #76.
+  * A `field` helper is now available in `formContext` as well as in the custom form block helpers. This reactively gets the value of any given form field (even nested ones).
+    * Example: `{{#with formContext}}{{field 'name.first'}}{{/with}}`.
+
 2.0.0
 =====
 
 * Add missing `onDestroy` hook for elements (Issue #73).
 * Fix SimpleSchema support (Issues #69, #84).
 * Fix global `context` helper and rename it to `formContext` (Issue #64).
-  - Add several missing properties to the helper object.
-  - **This is the only breaking change to the public API in this release.**
+  * Add several missing properties to the helper object.
+  * **This is the only breaking change to the public API in this release.**
 * Convert codebase to JavaScript as part of a transition to ES2015 classes.
 * Refactor code, package structure, and improve comments.
 * Update SimpleSchema dependency to latest version.

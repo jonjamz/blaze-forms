@@ -9,6 +9,10 @@ Template.registerHelper('formContext', function () {
     // Provide reactive helpers for dealing with form state directly.
     // --------------------------------------------------------------
 
+    field: function (field) {
+      if (context.elementValues[field])
+        return context.elementValues[field].value.get();
+    },
     failed: function () {
       if (context && context.failed && context.failed.get)
         return context.failed.get();

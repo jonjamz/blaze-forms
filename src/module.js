@@ -585,6 +585,18 @@ ReactiveForms = (function () {
       return inst[MODULE_NAMESPACE];
     },
 
+    // Form field value.
+    // -----------------
+
+    field: function (field) {
+      var component, inst;
+      inst = Template.instance();
+      component = inst[MODULE_NAMESPACE];
+      if (component.elementValues[field]) {
+        return component.elementValues[field].value.get();
+      }
+    },
+
     // Form states.
     // ------------
 
