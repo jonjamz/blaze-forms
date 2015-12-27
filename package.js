@@ -1,11 +1,13 @@
 Package.describe({
   name: 'templates:forms',
   summary: 'Dead easy reactive forms with validation.',
-  version: '2.1.0',
+  version: '2.1.1',
   git: 'https://github.com/meteortemplates/forms.git'
 });
 
 Package.onUse(function(api) {
+
+  api.export('ReactiveForms');
 
   api.versionsFrom('METEOR@1.0');
 

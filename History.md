@@ -3,6 +3,11 @@ vNext
 
 * Massive docs overhaul (Issues #14, #48, #62).
 
+2.1.1
+=====
+
+* Add missing namespace export to package.js.
+
 2.1.0
 =====
 
