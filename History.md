@@ -3,6 +3,11 @@ vNext
 
 * Massive docs overhaul (Issues #14, #48, #62).
 
+2.1.2
+=====
+
+* Destroyed element templates are now removed from the validation context (Issue #87).
+
 2.1.1
 =====
 

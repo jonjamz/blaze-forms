@@ -313,6 +313,19 @@ ReactiveForms = (function () {
 
       };
 
+      // Remove an existing field from the schema validation context.
+      component.removeFromValidation = function (field) {
+        if (!component.schemaContext) return;
+
+        // SimpleSchema fix to remove field from schema context (Issue #87).
+        // See: https://github.com/aldeed/meteor-simple-schema/blob/master/simple-schema-context.js#L108
+        var invalidKeys = component.schemaContext._invalidKeys;
+        component.schemaContext._invalidKeys = _.reject(invalidKeys, function (item) {
+          return item.name === field;
+        });
+        component.schemaContext._markKeysChanged([field]);
+      };
+
       // Form field data
       // ---------------
 
@@ -354,6 +367,7 @@ ReactiveForms = (function () {
         delete component.elementValues[field];
         deleteByDotNotation(component.changedValues, field);
         deleteByDotNotation(component.validatedValues, field);
+        component.removeFromValidation(field);
       };
 
       // Set values to form field data.
