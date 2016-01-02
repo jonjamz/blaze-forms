@@ -2,21 +2,22 @@
 
 ### Form Elements
 
-A TemplatesForms Form Element is a reusable component that plays the same role as a
-typical HTML form control, such as an `<input>` or `<select>` elements.
+A form element represents a single field in a given form. It collects user input, formats it as needed, and sends it to the surrounding form block. 
 
-Unlike HTML form elements, though, TemplatesForms elements are extremely flexible and
-powerful. They consistently transform user input into a desired data structure that is ready
-to insert into a database.
+Form elements are reusable components that play the same role as their raw HTML counterparts, such as the `<input>` or `<select>` tags, but they are much more flexible.
 
-#### First Step: Create a Blaze Template
+Form elements can be simple or complex--whatever is required--from a Twitter Search module that returns an array of objects, or an email input that returns a trimmed string.
+
+Think of a form element in this library as a component that consistently transforms any type of user input into a data structure ready to insert into a database.
+
+#### Step 1: Create a Blaze Template
 
 * Template must contain one *HTML element*, for example `<input>`.
 * The HTML element must:
-  * Have the `reactive-element` class (or a custom selector you specify using `validationSelector`).
-  * Support the `validationEvent` type(s) you specify in `createElement` options.
+  * Have the `reactive-element` class (or a custom selector you specify using `validationSelector` in the `createElement` options).
+  * Support the `validationEvent` type(s) you specify in `createElement` options--for example, `click`.
 
-> You can also put the `reactive-element` class on a container in the element to delegate the event.
+>**Tip**: You can also put the `reactive-element` class on a container in the element to delegate the event.
 
 Here's an example of a compatible element template.
 
@@ -25,6 +26,7 @@ Here's an example of a compatible element template.
   <strong>{{label}}</strong>
   <br>
   <input placeholder={{instructions}} class="reactive-element" value={{value}}>
+  <!-- Only show error messages if submission has been attempted -->
   {{#if submitted}}
     {{#if errorMessage}}<p class="error-message">{{errorMessage}}</p>{{/if}}
   {{/if}}
@@ -34,66 +36,64 @@ Here's an example of a compatible element template.
 Element templates have access to the following *local* helpers:
 
 * `{{value}}`
-  * The last value of this Element that was able to pass validation.
+  * The last value of this element that was able to pass validation.
   * Useful with some form components, such as a toggle button.
-  * If you specified a `data` object on the form or Element, this will initially hold the value associated with the relevant field in that object.
+  * If you specified a `data` object on the form or element, this will initially hold the value of the corresponding field in that object. This is how you can show pre-populated values.
 * `{{originalValue}}` (when initial data)
   * This contains the original value from initial data for this field.
 * `{{uniqueValue}}` (when initial data)
-  * This is *true* if the Element's current value differs from the original value, or *false* if it's the same.
+  * This is *true* if the element's current value differs from the original value, or *false* if it's the same.
   * Use this to show users what fields they've changed and what fields they haven't.
 * `{{valid}}`
-  * Use this to show validation state on the Element, for example a check mark.
-  * Initial data passed into the Element is validated on `rendered`.
+  * Use this to show validation state on the element, for example a check mark.
+  * Initial data passed into the element is validated on `rendered`.
   * Defaults to *true* if no schema is provided.
 * `{{changed}}` (inverse `{{unchanged}}`)
-  * This is *true* once the Element's value has successfully changed.
+  * This is *true* once the element's value has successfully changed.
   * Use this to show or hide things until the first validated value change is made.
-  * Initial data passed into the Element doesn't trigger `changed`.
+  * Initial data passed into the element doesn't trigger `changed`.
 * `{{isChild}}`
-  * This is *true* if the Element is wrapped in a Form Block, or *false* if it's not.
-  * Use this to show or hide things regardless of what a parent Form Block's state is--for example, some different formatting.
+  * This is *true* if the element is wrapped in a form block, or *false* if it's not.
+  * Use this to show or hide things regardless of what a parent form block's state is--for example, some different formatting.
 
 These helpers are available when a *SimpleSchema* is being used:
 
 * `{{label}}`
-  * From the [label](https://github.com/aldeed/meteor-simple-schema#label) field in your *SimpleSchema* for this Element's `field`.
-  * Use this as the title for your Element, for example "First Name".
+  * From the [label](https://github.com/aldeed/meteor-simple-schema#label) field in your *SimpleSchema* for this element's `field`.
+  * Use this as the title for your element, for example "First Name".
 * `{{instructions}}`
   * A field we extended *SimpleSchema* with for this package.
   * Good for usability, use this as the placeholder message or an example value.
 * `{{errorMessage}}`
   * A reactive error message for this field, using [messages](https://github.com/aldeed/meteor-simple-schema#customizing-validation-messages) provided by *SimpleSchema*.
 
-While inside a Form Block, these *form-level* helpers will be available:
+While inside a form block, these *form-level* helpers will be available:
 
 * `{{submitted}}` (inverse `{{unsubmitted}}`)
-  * Lets us know if a parent Form Block has been submitted yet.
-  * Use this to wrap `{{errorMessage}}` to delay showing Element invalidations until submit.
+  * Lets us know if a parent form block has been submitted yet.
+  * Use this to wrap `{{errorMessage}}` to delay showing element invalidations until submit.
 * `{{loading}}`
   * Lets us know if a form action is currently running.
-  * Use this to disable changes to an Element while the submit action is running.
+  * Use this to disable changes to an element while the submit action is running.
 * `{{success}}`
   * This is *true* if a form action was successful.
-  * Use this to hide things in the Element after submission.
+  * Use this to hide things in the element after submission.
 
-All the *form-level* helpers will be `false` when an Element is running standalone.
-However, you can override specific properties on an Element when you invoke it:
+All the *form-level* helpers will be `false` when an element is running standalone. However, you can override specific properties on an element when you invoke it:
 
 ```handlebars
 <!-- The `basicInput` example will now show its error messages when standalone -->
 {{> basicInput schema=schema field='testField' submitted=true}}
 ```
 
-#### Second Step: Register the Template
+#### Step 2: Register the Template
 
-Elements will not function properly until they are registered (and it's the same for a Form
-Block).
+Elements will not function properly until they are registered (and it's the same for a form block).
 
 ```javascript
 TemplatesForms.createElement({
   template: 'basicInput',
-  validationEvent: 'keyup', // Can also be an array of events as of 1.13.0!
+  validationEvent: 'keyup', // Can also be an array of events!
   validationValue: function (el, clean, template) {
     // This is an optional method that lets you hook into the validation event
     // and return a custom value to validate with.
@@ -123,7 +123,7 @@ Other available options for `createElement`:
 * `created`, `rendered`, and `destroyed` callbacks--these are safe equivalents to the normal Meteor
   template callbacks.
 
-#### Third Step: Usage
+#### Step 3: Usage
 
 Elements can be used standalone, with a *SimpleSchema* specified, like this:
 
@@ -131,8 +131,7 @@ Elements can be used standalone, with a *SimpleSchema* specified, like this:
 {{> basicInput schema=schema field='testField'}}
 ```
 
-However, elements are usually used within a TemplatesForms container (a Form Block), where
-they transparently integrate with the parent form component.
+However, elements are usually used within a TemplatesForms container (a Form Block), where they transparently integrate with the parent form component.
 
 ```handlebars
 {{#basicFormBlock schema=schema action=action}}
@@ -142,30 +141,26 @@ they transparently integrate with the parent form component.
 
 Here's what changes when this happens:
 
-* Elements *use the form-level schema*--the `field` property on the element specifies which
-  field in the form's schema to use.
+* Elements *use the form-level schema*--the `field` property on the element specifies which field in the form's schema to use.
 * An element that fails validation will *prevent the form from submitting*.
 * Elements *get access to form-level state*, enabling helpers like `{{loading}}`.
 * Element values that pass validation are stored in *form-level data context*.
 
 **Nested Elements**
 
-Elements may also be nested up to 5 levels deep. Child elements will traverse contexts until
-they find the top-level parent element. Use this to:
+Elements may also be nested up to 5 levels deep. Child elements will traverse contexts until they find the top-level parent element. Use this to:
 
 * Abstract common formatting such as labels and error messages into a shared wrapper element.
-* Compose simpler elements into more complex ones, such as a drop-down that loads data into
-a checklist.
+* Compose simpler elements into more complex ones, such as a drop-down that loads data into a checklist.
 
 See the [How-To Guide](../how-to/NestedElements.md) for more information.
 
 #### Highlights
 
-> When running standalone (without being wrapped in a Form Block) you'll put the schema on the
-Element's template invocation. You can also override the other form-level helpers on Elements this way.
+> A form element must contain an HTML element with class `reactive-element` unless you specifically configure it otherwise. This is the DOM element where event handlers will be registered.
+
+> When running standalone (without being wrapped in a Form Block) you'll put the schema on the element's template invocation. You can also override the other form-level helpers on elements this way.
 
 > To force an element to run in standalone mode, you can specify `standalone=true` in the template's invocation.
-
-> Be sure to add the reactive-element class to your Element so that it's selected when the form action is run.
 
 > Partial element templates can be used to abstract out common code. You can even create element block templates to wrap your elements.
