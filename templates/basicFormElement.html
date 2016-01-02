@@ -1,0 +1,6 @@
+<template name="basicFormElement">
+  <strong>{{label}}</strong>
+  <br>
+  <input placeholder={{instructions}} class="reactive-element" value={{value}}>
+  <em>({{#if valid}}Valid{{else}}Invalid{{/if}})</em>
+</template>
