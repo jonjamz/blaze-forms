@@ -56,8 +56,8 @@ TemplatesForms.registerFormElement({
   template: 'inputElement',
   validationEvent: 'keyup',
   validationValue: function (el, clean, template) {
-    var values = $(el).find('input').map(function () {
-      return $(this).val();
+    var values = $.map($(el).find("input"), function(e,i) {
+      return $(e).val();
     });
     return values; // An array with all your input values
   },
