@@ -20,8 +20,8 @@ TemplatesForms.registerFormElement({
   template: 'dateTimeElement',
   validationEvent: 'change',
   validationValue: function (el, clean, template) {
-    var values = $(el).find('input').map(function () {
-      return $(this).val();
+    var values = $.map($(el).find("input"), function (e) {
+      return $(e).val();
     });
     return new Date(values.join('T')); // A single Date Object.
   }
