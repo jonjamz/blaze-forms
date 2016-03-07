@@ -536,6 +536,14 @@ ReactiveForms = (function () {
         var callbacks, formElements;
         component.submitted.set(true);
 
+        // Ensure values passed to form action are current
+        // Issue #94
+        formElements = self.findAll(component.elementSelectors.join(', '));
+        formElements.forEach(function (element) {
+          var instance = Blaze.getView(element).templateInstance();
+          instance[MODULE_NAMESPACE].validateElement(element, true);
+        });
+
         // Check the schema if we're using SimpleSchema
         // If any values are bad, return without running the action function.
         if (component.schemaContext) {
@@ -553,7 +561,6 @@ ReactiveForms = (function () {
         // Send form elements and callbacks to action function.
         //
         // The action function is bound to component.validatedValues.
-        var formElements = self.findAll(component.elementSelectors.join(', '));
         var callbacks = {
           success: function (message) {
             return component.setExclusive('success', message);
