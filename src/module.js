@@ -39,6 +39,13 @@ var isObject = function (x) {
   return _.isObject(x) && !_.isArray(x) && !_.isFunction (x) && !_.isDate(x) && !_.isRegExp(x);
 };
 
+var parentView= function(view){
+  if(view != null){ //!= on purpose as it's also false on undefined
+    return view.originalParentView //originalParentView is used with the 'InOuterTemplateScope' when contentBlock Is used
+        || view.parentView;
+  }
+  return ;
+}
 
 // Functions used to work with the internal form data.
 // Supports working with dot notation, but doesn't currently support arrays.
@@ -775,13 +782,16 @@ ReactiveForms = (function () {
       component.establishParentContext = function () {
 
         // Traverse parent contexts to determine if it's a child element or sub-element.
-        while (component.distance < 6 && !component.isChild) {
+        // Note that it is a possibility add a dependency on 
+        var view = parentView(Template.instance().view);
+
+        while (view && !component.isChild) {
 
           // Start at 1.
           component.distance++;
 
           // Parent data from current distance.
-          var dataAtDistance = Template.parentData(component.distance);
+          var dataAtDistance = Blaze.getData(view);
 
           // Child element in this context?
           // In the Blaze implementation, we tell by checking for `data.context`.
@@ -793,6 +803,7 @@ ReactiveForms = (function () {
           } else if (dataAtDistance && _.has(dataAtDistance, 'field')) {
             component.integrateWithFormElement(dataAtDistance);
           }
+          view = parentView(view);
         }
       };
 
