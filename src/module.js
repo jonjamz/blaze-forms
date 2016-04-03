@@ -200,7 +200,7 @@ ReactiveForms = (function () {
         }));
 
         // Match.test on Match.Optional SimpleSchema fails sometimes  because it generates a unused message using EJSON.clone
-        if (_.has(data, 'schema') && (!data.schema || data.schema &&  data.schema instanceof SimpleSchema)) {
+        if (_.has(data, 'schema') && (!data.schema || data.schema &&  !(data.schema instanceof SimpleSchema))) {
           canWarn && console.warn(details.errorMessages.schema);
         }
         if (!(_.has(data, 'action') && Match.test(data.action, Function))) {
