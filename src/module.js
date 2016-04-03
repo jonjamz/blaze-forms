@@ -549,7 +549,7 @@ ReactiveForms = (function () {
       // ------
 
       // Validate data and run provided action function
-      component.submit = function () {
+      component.submit = function (parent_callbacks) {
         var callbacks, formElements;
         component.submitted.set(true);
 
@@ -558,6 +558,9 @@ ReactiveForms = (function () {
         if (component.schemaContext) {
           if (!!component.schemaContext.invalidKeys().length) {
             component.setExclusive('invalid');
+            if(_.isFunction(parent_callbacks && parent_callbacks.failed) ){
+              parent_callbacks.failed(component.schemaContext.getErrorObject().message);
+            }
             return;
           }
         }
@@ -573,13 +576,19 @@ ReactiveForms = (function () {
         var formElements = self.findAll(component.elementSelectors.join(', '));
         var callbacks = {
           success: function (message) {
-            return component.setExclusive('success', message);
+            var ret= component.setExclusive('success', message);
+            _.isFunction(parent_callbacks && parent_callbacks.success) && parent_callbacks.success(message);
+            return ret;
           },
           failed: function (message) {
-            return component.setExclusive('failed', message);
+            var ret= component.setExclusive('failed', message);
+            _.isFunction(parent_callbacks && parent_callbacks.failed) && parent_callbacks.failed(message);
+            return ret;
           },
           reset: function (hard) {
-            return component.resetForm(hard);
+            var ret= component.resetForm(hard);
+            _.isFunction(parent_callbacks && parent_callbacks.reset) && parent_callbacks.reset(hard);
+            return ret;
           }
         };
         return self.data.action.call(component.validatedValues, formElements, callbacks, component.changedValues);
