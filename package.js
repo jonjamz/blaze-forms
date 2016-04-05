@@ -1,7 +1,7 @@
 Package.describe({
   name: 'templates:forms',
   summary: 'Dead easy reactive forms with validation.',
-  version: '2.1.2',
+  version: '2.1.4',
   git: 'https://github.com/meteortemplates/forms.git'
 });
 
@@ -27,10 +27,8 @@ Package.onUse(function(api) {
   api.imply('aldeed:simple-schema');
 
   // Templates
-  api.addFiles('templates/defaultFormBlock.html', 'client');
-  api.addFiles('templates/examples/basicForm.html', 'client');
-  api.addFiles('templates/examples/basicFormBlock.html', 'client');
-  api.addFiles('templates/examples/basicInput.html', 'client');
+  api.addFiles('templates/basicFormElement.html', 'client');
+  api.addFiles('templates/basicFormBlock.html', 'client');
 
   // Extensions
   api.addFiles('extensions/simple-schema.js');
