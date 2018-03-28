@@ -1,6 +1,6 @@
 
 
-**Note: While this project works fine, it is no longer being actively maintained. If you would like to maintain this project, please create an issue.**
+**Note: While this project is generally in working order, it is no longer being actively maintained. If you would like to maintain this project, please create an issue.**
 
 About
 -----
