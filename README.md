@@ -1,4 +1,6 @@
-*Note: The latest release, `v2.0.0`, brings many great improvements and only one breaking change to the public API. Updated documentation is forthcoming. Please see the `History.md` document for details.*
+
+
+**Note: While this project works fine, it is no longer being actively maintained. If you would like to maintain this project, please create an issue.**
 
 About
 -----
