@@ -23,7 +23,7 @@ var indexOf = [].indexOf || function (item) {
 
 // Custom empty classes to explicitly represent actions we would otherwise infer from
 // built-in types. Used with `new` and `instanceof`.
-var Stopper = function () {};
+
 
 
 // Utility functions.
@@ -39,76 +39,92 @@ var isObject = function (x) {
   return _.isObject(x) && !_.isArray(x) && !_.isFunction (x) && !_.isDate(x) && !_.isRegExp(x);
 };
 
-
-// Functions used to work with the internal form data.
-// Supports working with dot notation, but doesn't currently support arrays.
-// Will be replaced with a custom store package.
-var dotNotationToObject = function (key, val) {
-  var keys;
-  if (!key) {
-    return;
+var parentView= function(view){
+  if(view != null){ //!= on purpose as it's also false on undefined
+    return view.originalParentView //originalParentView is used with the 'InOuterTemplateScope' when contentBlock Is used
+        || view.parentView;
   }
-  keys = key.split('.');
-  return _.reduceRight(keys, function (memo, key) {
-    var obj;
-    obj = {};
-    obj[key] = memo;
-    return obj;
-  }, val);
-};
+  return ;
+}
 
-var dotNotationToValue = function (obj, key) {
-  var keys, val;
-  if (!obj || !key) {
-    return;
-  }
-  keys = key.split('.');
-  val = _.reduce(keys, function (memo, key) {
-    if (_.has(memo, key)) {
-      return memo[key];
-    } else {
-      return new Stopper();
+var details = {
+  Stopper : function () {},
+
+  // Functions used to work with the internal form data.
+  // Supports working with dot notation, but doesn't currently support arrays.
+  // Will be replaced with a custom store package.
+  dotNotationToObject:  function (key, val) {
+    var keys;
+    if (!key) {
+      return;
     }
-  }, obj);
-  if (!(val instanceof Stopper)) {
-    return val;
-  }
-};
+    keys = key.split('.');
+    return _.reduceRight(keys, function (memo, key) {
+      var obj;
+      if(key == "$"){
+        // dirty hack to allow validating using $ and [0]
+        obj=[memo]
+      }else {
+        obj = {};
+      };
+      obj[key] = memo;
+      return obj;
+    }, val);
+  },
 
-var deleteByDotNotation = function (obj, key) {
-  var args;
-  if (!obj || !key) {
-    return;
-  }
-  args = [obj];
-  args = args.concat(key.split('.'));
-  Meteor._delete.apply(this, args);
-  return args[0];
-};
-
-var deepExtendObject = function (first, second) {
-  var prop;
-  for (prop in second) {
-    if (!hasProp.call(second, prop)) continue;
-    if (isObject(first[prop]) && _.has(first, prop)) {
-      deepExtendObject(first[prop], second[prop]);
-    } else {
-      first[prop] = second[prop];
+  dotNotationToValue: function (obj, key) {
+    var keys, val;
+    if (!obj || !key) {
+      return;
     }
+    keys = key.split('.');
+    val = _.reduce(keys, function (memo, key) {
+      if (_.has(memo, key)) {
+        return memo[key];
+      } else {
+        return new details.Stopper();
+      }
+    }, obj);
+    if (!(val instanceof details.Stopper)) {
+      return val;
+    }
+  },
+
+  deleteByDotNotation: function (obj, key) {
+    var args;
+    if (!obj || !key) {
+      return;
+    }
+    args = [obj];
+    args = args.concat(key.split('.'));
+    Meteor._delete.apply(this, args);
+    return args[0];
+  },
+
+  deepExtendObject: function (first, second) {
+    var prop;
+    for (prop in second) {
+      if (!hasProp.call(second, prop)) continue;
+      if ((isObject(first[prop]) || _.isArray(first[prop])) && _.has(first, prop)) {
+        arguments.callee(first[prop], second[prop]);
+      } else {
+        first[prop] = second[prop];
+      }
+    }
+    return first;
+  },
+
+
+  // Add error messages here to keep things clean.
+  errorMessages: {
+    schema: "[forms] The `schema` field in a Form Block is optional, but if it exists, it must be an instance of SimpleSchema.",
+    action: "[forms] The `action` function is missing or invalid in your Form Block. This is a required field--you can't submit your form without it.",
+    data: "[forms] The `data` field in a Form Block is optional, but if it exists, it must either be an object or a falsey value.",
+    change: "[forms] The `onDataChange` hook is optional, but if it exists, it must be a function.",
+    options: "[forms] The `options` parameter in a Form Block is optional, but if it exists, it must be an object."
   }
-  return first;
-};
 
-
-// Add error messages here to keep things clean.
-var errorMessages = {
-  schema: "[forms] The `schema` field in a Form Block is optional, but if it exists, it must be an instance of SimpleSchema.",
-  action: "[forms] The `action` function is missing or invalid in your Form Block. This is a required field--you can't submit your form without it.",
-  data: "[forms] The `data` field in a Form Block is optional, but if it exists, it must either be an object or a falsey value.",
-  change: "[forms] The `onDataChange` hook is optional, but if it exists, it must be a function.",
-  options: "[forms] The `options` parameter in a Form Block is optional, but if it exists, it must be an object."
-};
-
+}; // details
 
 // Module.
 ReactiveForms = (function () {
@@ -183,20 +199,21 @@ ReactiveForms = (function () {
           return !x || isObject(x);
         }));
 
-        if (_.has(data, 'schema') && !Match.test(data.schema, Match.Optional(SimpleSchema))) {
-          canWarn && console.warn(errorMessages.schema);
+        // Match.test on Match.Optional SimpleSchema fails sometimes  because it generates a unused message using EJSON.clone
+        if (_.has(data, 'schema') && (!data.schema || data.schema &&  !(data.schema instanceof SimpleSchema))) {
+          canWarn && console.warn(details.errorMessages.schema);
         }
         if (!(_.has(data, 'action') && Match.test(data.action, Function))) {
-          canWarn && console.warn(errorMessages.action);
+          canWarn && console.warn(details.errorMessages.action);
         }
         if (_.has(data, 'data') && !Match.test(data.data, dataTest)) {
-          canWarn && console.warn(errorMessages.data);
+          canWarn && console.warn(details.errorMessages.data);
         }
         if (_.has(data, 'onDataChange') && !Match.test(data.onDataChange, Function)) {
-          canWarn && console.warn(errorMessages.change);
+          canWarn && console.warn(details.errorMessages.change);
         }
         if (_.has(data, 'options') && !Match.test(data.options, dataTest)) {
-          canWarn && console.warn(errorMessages.options);
+          canWarn && console.warn(details.errorMessages.options);
         }
       });
 
@@ -365,8 +382,8 @@ ReactiveForms = (function () {
       // Remove an element from the form.
       component.removeElement = function (field) {
         delete component.elementValues[field];
-        deleteByDotNotation(component.changedValues, field);
-        deleteByDotNotation(component.validatedValues, field);
+        details.deleteByDotNotation(component.changedValues, field);
+        details.deleteByDotNotation(component.validatedValues, field);
         component.removeFromValidation(field);
       };
 
@@ -374,8 +391,8 @@ ReactiveForms = (function () {
       // Note: `field` here is a string in dot notation.
       component.setFormDataField = function (field, value, fromUserEvent) {
         var currentValue, objectWithValue, original;
-        currentValue = dotNotationToValue(component.validatedValues, field);
-        objectWithValue = dotNotationToObject(field, value);
+        currentValue = details.dotNotationToValue(component.validatedValues, field);
+        objectWithValue = details.dotNotationToObject(field, value);
         original = component.elementValues[field].original.get();
 
         // First, opt into setting `changed` if this is a unique update.
@@ -383,7 +400,7 @@ ReactiveForms = (function () {
           if (!_.isEqual(currentValue, value)) {
 
             // Set value in form data context, optionally set `component.changedValues`.
-            component.validatedValues = deepExtendObject(component.validatedValues, objectWithValue);
+            component.validatedValues = details.deepExtendObject(component.validatedValues, objectWithValue);
             if (fromUserEvent) {
               component.setChanged();
 
@@ -395,12 +412,12 @@ ReactiveForms = (function () {
                 if (!_.isEqual(original, value)) {
 
                   // If the value is unique from the original, add to `component.changedValues`.
-                  component.changedValues = deepExtendObject(component.changedValues, objectWithValue);
+                  component.changedValues = details.deepExtendObject(component.changedValues, objectWithValue);
                 } else {
 
                   // If it's the same, remove this field altogether from `component.changedValues`.
                   // This should only contain fields that are different from the originals.
-                  component.changedValues = deleteByDotNotation(component.changedValues, field);
+                  component.changedValues = details.deleteByDotNotation(component.changedValues, field);
                 }
               }
             }
@@ -408,7 +425,7 @@ ReactiveForms = (function () {
 
         // If the field doesn't exist in `component.validatedValues` yet, add it.
         } else {
-          component.validatedValues = deepExtendObject(component.validatedValues, objectWithValue);
+          component.validatedValues = details.deepExtendObject(component.validatedValues, objectWithValue);
 
           // If this was a user-enacted change to the data, set `changed`.
           // Initial data and schema-provided data will not trigger `changed` (Issue #46).
@@ -418,7 +435,7 @@ ReactiveForms = (function () {
             // If there was initial data, but this field wasn't in it, include in `changed`
             // the first time.
             if (component.changedValues && Match.test(original, void 0)) {
-              component.changedValues = deepExtendObject(component.changedValues, objectWithValue);
+              component.changedValues = details.deepExtendObject(component.changedValues, objectWithValue);
             }
           }
         }
@@ -532,7 +549,7 @@ ReactiveForms = (function () {
       // ------
 
       // Validate data and run provided action function
-      component.submit = function () {
+      component.submit = function (parent_callbacks) {
         var callbacks, formElements;
         component.submitted.set(true);
 
@@ -541,6 +558,9 @@ ReactiveForms = (function () {
         if (component.schemaContext) {
           if (!!component.schemaContext.invalidKeys().length) {
             component.setExclusive('invalid');
+            if(_.isFunction(parent_callbacks && parent_callbacks.failed) ){
+              parent_callbacks.failed(component.schemaContext.getErrorObject().message);
+            }
             return;
           }
         }
@@ -556,13 +576,19 @@ ReactiveForms = (function () {
         var formElements = self.findAll(component.elementSelectors.join(', '));
         var callbacks = {
           success: function (message) {
-            return component.setExclusive('success', message);
+            var ret= component.setExclusive('success', message);
+            _.isFunction(parent_callbacks && parent_callbacks.success) && parent_callbacks.success(message);
+            return ret;
           },
           failed: function (message) {
-            return component.setExclusive('failed', message);
+            var ret= component.setExclusive('failed', message);
+            _.isFunction(parent_callbacks && parent_callbacks.failed) && parent_callbacks.failed(message);
+            return ret;
           },
           reset: function (hard) {
-            return component.resetForm(hard);
+            var ret= component.resetForm(hard);
+            _.isFunction(parent_callbacks && parent_callbacks.reset) && parent_callbacks.reset(hard);
+            return ret;
           }
         };
         return self.data.action.call(component.validatedValues, formElements, callbacks, component.changedValues);
@@ -744,6 +770,13 @@ ReactiveForms = (function () {
         // Parent contexts to traverse until form block context.
         distance: 0
       };
+      /* 
+        Add component to custom namespace (Issue #21).
+        
+        Also add it before continuing the onCreated callback to make it possible
+        to use a customized store
+      */
+      self[MODULE_NAMESPACE] = component;
 
       // Integrate with parent form block.
       component.integrateWithFormBlock = function (dataAtDistance) {
@@ -775,13 +808,16 @@ ReactiveForms = (function () {
       component.establishParentContext = function () {
 
         // Traverse parent contexts to determine if it's a child element or sub-element.
-        while (component.distance < 6 && !component.isChild) {
+        // Note that it is a possibility add a dependency on 
+        var view = parentView(Template.instance().view);
+
+        while (view && !component.isChild) {
 
           // Start at 1.
           component.distance++;
 
           // Parent data from current distance.
-          var dataAtDistance = Template.parentData(component.distance);
+          var dataAtDistance = Blaze.getData(view);
 
           // Child element in this context?
           // In the Blaze implementation, we tell by checking for `data.context`.
@@ -793,6 +829,7 @@ ReactiveForms = (function () {
           } else if (dataAtDistance && _.has(dataAtDistance, 'field')) {
             component.integrateWithFormElement(dataAtDistance);
           }
+          view = parentView(view);
         }
       };
 
@@ -820,7 +857,7 @@ ReactiveForms = (function () {
 
         // Get the initial value for this field from the form block.
         if (component.parentData.data)
-          component.initValue = dotNotationToValue(component.parentData.data, component.field);
+          component.initValue = details.dotNotationToValue(component.parentData.data, component.field);
 
       // Case #2: This element is not inside a form block--it runs standalone.
       } else {
@@ -831,7 +868,7 @@ ReactiveForms = (function () {
 
         // Get the initial value for this field from the element template itself.
         if (self.data.data)
-          component.initValue = dotNotationToValue(self.data.data, component.field);
+          component.initValue = details.dotNotationToValue(self.data.data, component.field);
       }
 
       // Ensured setup
@@ -868,7 +905,7 @@ ReactiveForms = (function () {
 
         // We are not inside a form block--compile an object with just this field/value to
         // test.
-        var object = dotNotationToObject(component.field, val);
+        var object = details.dotNotationToObject(component.field, val);
 
         // Get true/false for validation (validating against this field only).
         //
@@ -954,7 +991,7 @@ ReactiveForms = (function () {
         var data = component.isChild && Template.parentData(component.distance) || Template.currentData();
 
         if ((data != null ? data.data : void 0) != null) {
-          var fieldValue = dotNotationToValue(data.data, component.field);
+          var fieldValue = details.dotNotationToValue(data.data, component.field);
 
           // Update reactiveValue without tracking it.
           return Tracker.nonreactive(function () {
@@ -1015,7 +1052,7 @@ ReactiveForms = (function () {
 
         // Create a useful context to bind `component.getValidationValue` to.
         var ctx = {
-          stop: new Stopper(),
+          stop: new details.Stopper(),
           startup: !fromUserEvent,
           validate: function (val) {
             component.setValue(val, fromUserEvent);
@@ -1028,13 +1065,12 @@ ReactiveForms = (function () {
 
         // You can return `this.stop` if you're running manual validation.
         // Returning the result of `this.validate(val)` does this automatically, too.
-        if (!(val instanceof Stopper)) {
+        if (!(val instanceof details.Stopper)) {
           component.setValue(val, fromUserEvent);
         }
       };
 
-      // Add component to custom namespace (Issue #21).
-      self[MODULE_NAMESPACE] = component;
+      
 
       // Custom callback (Issue #20)
       // Call custom `created` function (could deprecate this because it's not necessary really).
@@ -1446,6 +1482,7 @@ ReactiveForms = (function () {
   // ========================================================================================
 
   return {
+    details:details,
     createFormBlock: createFormBlock,
     createForm: createForm,
     createElement: createElement,
