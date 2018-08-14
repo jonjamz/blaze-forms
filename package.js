@@ -1,7 +1,7 @@
 Package.describe({
   name: 'gliese:jonjamz-forms',
   summary: '(INTERNAL USE) Dead easy reactive forms with validation.',
-  version: '2.1.4',
+  version: '2.1.5',
   git: 'https://github.com/meteortemplates/forms.git'
 });
 

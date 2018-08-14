@@ -24,13 +24,13 @@ ecmascript-runtime-client@0.7.2
 ecmascript-runtime-server@0.7.1
 ejson@1.1.0
 geojson-utils@1.0.10
-gliese:jonjamz-forms@2.1.4
+gliese:jonjamz-forms@2.1.5
 html-tools@1.0.5
 htmljs@1.0.5
 http@1.4.1
 id-map@1.1.0
 jquery@1.11.4
-local-test:gliese:jonjamz-forms@2.1.4
+local-test:gliese:jonjamz-forms@2.1.5
 logging@1.1.20
 mdg:validation-error@0.2.0
 meteor@1.9.0
