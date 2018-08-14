@@ -541,7 +541,11 @@ ReactiveForms = (function () {
         formElements = self.findAll(component.elementSelectors.join(', '));
         formElements.forEach(function (element) {
           var instance = Blaze.getView(element).templateInstance();
-          instance[MODULE_NAMESPACE].validateElement(element, true);
+          var instanceFormContext = instance[MODULE_NAMESPACE];
+          // Check form context exists in case of unintended element selector matches
+          if (instanceFormContext) {
+            instanceFormContext.validateElement(element, true);
+          }
         });
 
         // Check the schema if we're using SimpleSchema
